@@ -79,13 +79,39 @@
   }
 
   /* ---------------------------------------------------------- measure */
-  var top = 0, span = 1, vh = 1;
+  /* One anchor per beat: the scroll position at which that beat sits
+     dead centre in the viewport, which is where its camera stop
+     belongs. Measured rather than assumed, because a beat whose copy
+     is taller than the viewport grows past 100vh and would otherwise
+     drift out of step with the camera. */
+  var anchors = [];
+  var vh = 1;
 
   function measure() {
     vh = window.innerHeight || doc.clientHeight;
-    var rect = ascent.getBoundingClientRect();
-    top = rect.top + (window.pageYOffset || doc.scrollTop || 0);
-    span = Math.max(1, ascent.offsetHeight - vh);
+    var pageTop = window.pageYOffset || doc.scrollTop || 0;
+
+    anchors.length = 0;
+    for (var i = 0; i < beats.length; i++) {
+      var r = beats[i].getBoundingClientRect();
+      anchors.push(r.top + pageTop + r.height / 2 - vh / 2);
+    }
+    /* must be strictly increasing for the search below */
+    for (var j = 1; j < anchors.length; j++) {
+      if (anchors[j] <= anchors[j - 1]) anchors[j] = anchors[j - 1] + 1;
+    }
+  }
+
+  /* where along the flight plan a given scroll position sits, in
+     floor units: 0 at the first beat, LAST at the last */
+  function positionAt(y) {
+    if (!anchors.length) return 0;
+    if (y <= anchors[0]) return 0;
+    if (y >= anchors[LAST]) return LAST;
+    var i = 0;
+    while (i < LAST && y > anchors[i + 1]) i++;
+    var lo = anchors[i], hi = anchors[i + 1];
+    return i + (y - lo) / Math.max(1, hi - lo);
   }
 
   /* ---------------------------------------------------------- pointer */
@@ -112,8 +138,8 @@
 
   function update() {
     var y = window.pageYOffset || doc.scrollTop || 0;
-    var p = clamp((y - top) / span, 0, 1);
-    var u = p * LAST;                       /* position in floor units */
+    var u = positionAt(y);                  /* position in floor units */
+    var p = LAST ? u / LAST : 0;
 
     /* -- camera: interpolate the viewBox between two stops -- */
     var i = clamp(Math.floor(u), 0, LAST - 1);
@@ -260,6 +286,27 @@
   } else {
     revealables.forEach(function (el) { el.classList.add('is-in'); });
   }
+
+  /* ---------------------------------------------------------- jump links */
+  /* Anchor navigation would put a beat's top at the viewport top,
+     which only matches the camera stop when the beat is exactly one
+     screen tall. Scroll to the measured anchor instead. */
+  toArray(document.querySelectorAll('a[href^="#beat-"]')).forEach(function (link) {
+    link.addEventListener('click', function (ev) {
+      var id = link.getAttribute('href').slice(1);
+      var n = -1;
+      for (var i = 0; i < beats.length; i++) {
+        if (beats[i].id === id) { n = i; break; }
+      }
+      if (n < 0) return;
+      ev.preventDefault();
+      measure();
+      window.scrollTo({
+        top: Math.max(0, anchors[n]),
+        behavior: calm ? 'auto' : 'smooth'
+      });
+    });
+  });
 
   /* ---------------------------------------------------------- go */
   measure();

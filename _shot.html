@@ -1303,5 +1303,26 @@ npm run dev</code></pre>
 <script src="assets/js/floors.js"></script>
 <script src="assets/js/instruments.js"></script>
 <script src="assets/js/app.js"></script>
+<script>
+(function(){
+  var m=/[?&]at=([0-9.]+)/.exec(location.search);
+  if(!m) return;
+  var at=parseFloat(m[1]);
+  history.scrollRestoration="manual";
+  document.documentElement.style.scrollBehavior="auto";
+  function go(){
+    var a=document.getElementById("ascent");
+    var span=a.offsetHeight-window.innerHeight;
+    window.scrollTo(0, a.offsetTop + at*span);
+    window.dispatchEvent(new Event("scroll"));
+    var d=document.getElementById("dbg")||document.createElement("div");
+    d.id="dbg";
+    d.style.cssText="position:fixed;left:8px;bottom:8px;z-index:9999;background:#000;color:#0f0;font:11px monospace;padding:4px 7px";
+    d.textContent="y="+Math.round(window.scrollY)+" ascentTop="+a.offsetTop+" ascentH="+a.offsetHeight+" vh="+window.innerHeight+" doc="+document.documentElement.scrollHeight;
+    document.body.appendChild(d);
+  }
+  window.addEventListener("load",function(){ go(); setTimeout(go,80); setTimeout(go,400); });
+})();
+</script>
 </body>
 </html>

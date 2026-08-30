@@ -144,6 +144,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* clip, not hidden: `overflow: hidden` would make this a scroll
+     container and break `position: sticky` on the stage */
+  overflow-x: clip;
 }
 
 body {
@@ -153,7 +156,6 @@ body {
   font-family: var(--font);
   font-size: clamp(1rem, .96rem + .2vw, 1.075rem);
   line-height: 1.6;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   transition: background-color .6s var(--ease), color .6s var(--ease);
 }
