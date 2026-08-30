@@ -1,14 +1,18 @@
 /* ============================================================
-   Nimbus - the ascent engine.
+   Nimbus - the scroll engine.
 
-   One scroll position drives everything:
-     - the SVG viewBox (the camera climbing the tower)
-     - cloud-deck parallax
-     - which floor's windows are lit
-     - which diorama is on screen, and how far into it
-     - fog between floors
-     - the copy cards' arrival
-     - the altimeter and the floor rail
+   Scroll position drives one number, `u`, measured in beats.
+   Everything else is derived from it:
+
+     - the orb's palette (interpolated between adjacent beats)
+     - plasma intensity: calm between beats, surging on each
+     - --beam / --beam-2, so page accents drift with the core
+     - each panel's arrival
+     - the rail and the HUD
+
+   Beat positions are measured, not assumed, so a panel whose
+   copy runs taller than the viewport still lines up with its
+   own moment in the score.
 
    IntersectionObserver handles one-shot content reveals.
    ============================================================ */
@@ -17,73 +21,38 @@
   'use strict';
 
   var doc = document.documentElement;
-  var FLOORS = window.NIMBUS_FLOORS || [];
-  var BANDS = window.NIMBUS_BANDS || [];
-  var WORLD = window.NIMBUS_WORLD || { ground: 6100, beacon: 276, metres: 412 };
-  var LAST = FLOORS.length - 1;
+  var BEATS = window.NIMBUS_BEATS || [];
+  var LAST = BEATS.length - 1;
+  if (LAST < 1) return;
 
-  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var calm = window.matchMedia &&
+             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------------------------------------------------------- elements */
-  var ascent = document.getElementById('ascent');
+  var stack = document.getElementById('stack');
   var stage = document.getElementById('stage');
-  var camera = document.getElementById('camera');
-  var cutaway = document.getElementById('cutaway');
-  var dioramaHost = document.getElementById('dioramas');
-  var plateNo = document.getElementById('plateNo');
-  var plateName = document.getElementById('plateName');
-  var altimeter = document.getElementById('altimeter');
-  var altVal = document.getElementById('altVal');
-  var altBar = document.getElementById('altBar');
+  var canvas = document.getElementById('orb');
+  var hud = document.getElementById('hud');
+  var hudBeat = document.getElementById('hudBeat');
+  var hudMeter = document.getElementById('hudMeter');
+  var hudCharge = document.getElementById('hudCharge');
   var rail = document.getElementById('rail');
 
-  if (!ascent || !camera) return;
+  if (!stack || !canvas) return;
 
-  var bandEls = toArray(camera.querySelectorAll('.band'));
-  var dioramas = toArray(document.querySelectorAll('.diorama'));
-  var beats = toArray(document.querySelectorAll('.beat'));
-  var railLinks = rail ? toArray(rail.querySelectorAll('a')) : [];
-
-  /* windows grouped by the floor they belong to */
-  var windowsByFloor = {};
-  toArray(camera.querySelectorAll('.win')).forEach(function (w) {
-    var f = w.getAttribute('data-win');
-    (windowsByFloor[f] || (windowsByFloor[f] = [])).push(w);
-  });
-
-
-  var instruments = window.NimbusInstruments ? window.NimbusInstruments.init() : null;
-
-  /* ---------------------------------------------------------- helpers */
   function toArray(list) { return Array.prototype.slice.call(list); }
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function smooth(t) { return t * t * (3 - 2 * t); }
   function r2(n) { return Math.round(n * 100) / 100; }
 
-  /* ---------------------------------------------------------- day / night */
-  var toggle = document.getElementById('skyToggle');
+  var panels = toArray(document.querySelectorAll('.beat'));
+  var railLinks = rail ? toArray(rail.querySelectorAll('a')) : [];
 
-  function applySky(mode) {
-    doc.setAttribute('data-sky', mode);
-    if (toggle) toggle.setAttribute('aria-pressed', mode === 'night' ? 'true' : 'false');
-    try { localStorage.setItem('nimbus-sky', mode); } catch (e) {}
-  }
-
-  applySky(doc.getAttribute('data-sky') === 'night' ? 'night' : 'day');
-
-  if (toggle) {
-    toggle.addEventListener('click', function () {
-      applySky(doc.getAttribute('data-sky') === 'night' ? 'day' : 'night');
-    });
-  }
+  /* ---------------------------------------------------------- the orb */
+  var orb = window.NimbusOrb ? window.NimbusOrb.create(canvas) : null;
 
   /* ---------------------------------------------------------- measure */
-  /* One anchor per beat: the scroll position at which that beat sits
-     dead centre in the viewport, which is where its camera stop
-     belongs. Measured rather than assumed, because a beat whose copy
-     is taller than the viewport grows past 100vh and would otherwise
-     drift out of step with the camera. */
   var anchors = [];
   var vh = 1;
 
@@ -92,18 +61,17 @@
     var pageTop = window.pageYOffset || doc.scrollTop || 0;
 
     anchors.length = 0;
-    for (var i = 0; i < beats.length; i++) {
-      var r = beats[i].getBoundingClientRect();
+    for (var i = 0; i < panels.length; i++) {
+      var r = panels[i].getBoundingClientRect();
       anchors.push(r.top + pageTop + r.height / 2 - vh / 2);
     }
-    /* must be strictly increasing for the search below */
     for (var j = 1; j < anchors.length; j++) {
       if (anchors[j] <= anchors[j - 1]) anchors[j] = anchors[j - 1] + 1;
     }
+    if (orb) orb.resize();
   }
 
-  /* where along the flight plan a given scroll position sits, in
-     floor units: 0 at the first beat, LAST at the last */
+  /* where a scroll position sits along the score, in beats */
   function positionAt(y) {
     if (!anchors.length) return 0;
     if (y <= anchors[0]) return 0;
@@ -114,161 +82,112 @@
     return i + (y - lo) / Math.max(1, hi - lo);
   }
 
-  /* ---------------------------------------------------------- pointer */
-  var wantRx = 0, wantRy = 0, haveRx = 0, haveRy = 0, settled = true;
-  var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  /* ---------------------------------------------------------- update */
+  var mix = { beam: [0, 0, 0], arc: [0, 0, 0], core: [0, 0, 0] };
+  var current = -1;
+  var lastY = 0;
 
-  if (fine && !calm && stage) {
-    stage.addEventListener('mousemove', function (e) {
-      var nx = (e.clientX / window.innerWidth) * 2 - 1;
-      var ny = (e.clientY / window.innerHeight) * 2 - 1;
-      wantRy = clamp(nx, -1, 1) * 6;
-      wantRx = clamp(-ny, -1, 1) * 4;
-      settled = false;
-      request();
-    }, { passive: true });
-
-    stage.addEventListener('mouseleave', function () {
-      wantRx = 0; wantRy = 0; settled = false; request();
-    });
+  function blend(a, b, t, into) {
+    into[0] = lerp(a[0], b[0], t);
+    into[1] = lerp(a[1], b[1], t);
+    into[2] = lerp(a[2], b[2], t);
   }
 
-  /* ---------------------------------------------------------- the update */
-  var activeFloor = null;
+  function css(c) { return (c[0] | 0) + ' ' + (c[1] | 0) + ' ' + (c[2] | 0); }
 
   function update() {
     var y = window.pageYOffset || doc.scrollTop || 0;
-    var u = positionAt(y);                  /* position in floor units */
-    var p = LAST ? u / LAST : 0;
+    var u = positionAt(y);
+    var p = u / LAST;
 
-    /* -- camera: interpolate the viewBox between two stops -- */
+    /* -- palette: blend the two beats we sit between -- */
     var i = clamp(Math.floor(u), 0, LAST - 1);
     var t = smooth(u - i);
-    var a = FLOORS[i].cam;
-    var b = FLOORS[i + 1].cam;
+    var A = BEATS[i], B = BEATS[i + 1];
 
-    var cx = lerp(a.x, b.x, t);
-    var cy = lerp(a.y, b.y, t);
-    var cw = lerp(a.w, b.w, t);
-    var ch = lerp(a.h, b.h, t);
+    blend(A.pal.beam, B.pal.beam, t, mix.beam);
+    blend(A.pal.arc, B.pal.arc, t, mix.arc);
+    blend(A.pal.core, B.pal.core, t, mix.core);
 
-    camera.setAttribute('viewBox',
-      r2(cx) + ' ' + r2(cy) + ' ' + r2(cw) + ' ' + r2(ch));
+    doc.style.setProperty('--beam', css(mix.beam));
+    doc.style.setProperty('--beam-2', css(mix.arc));
 
-    /* -- cloud decks lag or outrun the camera -- */
-    for (var k = 0; k < bandEls.length; k++) {
-      var cfg = BANDS[k];
-      if (!cfg) continue;
-      bandEls[k].setAttribute('transform',
-        'translate(0 ' + r2((cy - cfg.ref) * cfg.par) + ')');
+    /* -- intensity: quiet between beats, full charge on one -- */
+    var near = Math.round(u);
+    var off = Math.abs(u - near);
+    var peak = Math.pow(clamp(1 - off * 2, 0, 1), 1.5);
+    var charge = lerp(A.charge, B.charge, t);
+    var intensity = charge * lerp(0.42, 1, peak);
+
+    if (orb) orb.set(mix, intensity);
+
+    /* -- scrolling hard whips the storm up -- */
+    var dy = Math.abs(y - lastY);
+    lastY = y;
+    if (orb && dy > 4) orb.surge(Math.min(0.3, dy / 1100));
+
+    /* -- panels arrive as they reach the middle of the screen -- */
+    for (var n = 0; n < panels.length; n++) {
+      var e = Math.max(0, 1 - Math.abs(n - u));
+      panels[n].style.setProperty('--enter', r2(smooth(e)));
     }
 
-    /* -- nearest floor, and how far off it we are -- */
-    var idx = Math.round(u);
-    var off = u - idx;                      /* -0.5 .. 0.5 */
-    var dist = Math.abs(off);
-    var floor = FLOORS[idx];
-
-    /* -- fog peaks exactly between two floors -- */
-    var fog = calm ? 0 : 0.9 * Math.pow(dist * 2, 1.5);
-    stage.style.setProperty('--fog', r2(fog));
-
-    /* -- the cutaway fades in once we are inside the tower -- */
-    var seg = 1 / LAST;
-    var opIn = smooth(clamp((p - seg * 0.30) / (seg * 0.5), 0, 1));
-    var opOut = 1 - smooth(clamp((p - (1 - seg * 0.80)) / (seg * 0.5), 0, 1));
-    var frameOp = Math.min(opIn, opOut);
-
-    cutaway.style.setProperty('--frame-op', r2(frameOp));
-    cutaway.style.setProperty('--frame-scale', r2(0.96 + frameOp * 0.04));
-
-    /* -- scrolling pushes the camera through the diorama -- */
-    if (dioramaHost) {
-      dioramaHost.style.setProperty('--dolly', r2(off * 170));
-    }
-
-    /* -- swap rooms, light windows, relabel the plate -- */
-    if (floor && floor.id !== activeFloor) {
-      var prev = activeFloor;
-      activeFloor = floor.id;
-
-      dioramas.forEach(function (d) {
-        d.classList.toggle('is-active', d.getAttribute('data-floor') === activeFloor);
-      });
-
-      Object.keys(windowsByFloor).forEach(function (f) {
-        var lit = f === activeFloor;
-        windowsByFloor[f].forEach(function (w) { w.classList.toggle('is-lit', lit); });
-      });
-
-      if (plateNo) plateNo.textContent = floor.no || '—';
-      if (plateName) plateName.textContent = floor.name;
-
-      if (instruments) {
-        if (prev) instruments.stop(prev);
-        instruments.start(activeFloor);
+    /* -- rail and HUD -- */
+    if (near !== current) {
+      current = near;
+      for (var k = 0; k < railLinks.length; k++) {
+        railLinks[k].classList.toggle('is-current', k === near);
       }
-
-      railLinks.forEach(function (link, n) {
-        link.classList.toggle('is-current', !!FLOORS[n + 1] && FLOORS[n + 1].id === activeFloor);
-      });
+      if (hudBeat) hudBeat.textContent = BEATS[near].label.toUpperCase();
     }
 
-    /* -- copy cards arrive as they reach the middle of the screen -- */
-    for (var n = 0; n < beats.length; n++) {
-      var bi = +beats[n].getAttribute('data-beat');
-      var e = Math.max(0, 1 - Math.abs(bi - u));
-      beats[n].style.setProperty('--enter', r2(smooth(e)));
+    if (hudMeter) hudMeter.style.setProperty('--w', r2(p * 100) + '%');
+    if (hudCharge) {
+      hudCharge.textContent = ('00' + Math.round(intensity * 100)).slice(-3) + '%';
     }
 
-    /* -- altimeter reads straight off the camera height -- */
-    var centre = cy + ch / 2;
-    var metres = Math.max(0, Math.round(
-      (WORLD.ground - centre) / (WORLD.ground - WORLD.beacon) * WORLD.metres
-    ));
-    if (altVal) altVal.textContent = metres < 100 ? ('00' + metres).slice(-3) : metres;
-    if (altBar) altBar.style.setProperty('--h', r2(p * 100) + '%');
-
-    if (altimeter) altimeter.classList.toggle('is-on', p > 0.015 && p < 0.995);
-    if (rail) rail.classList.toggle('is-on', p > 0.05 && p < 0.95);
-
-    /* -- pointer parallax, eased toward the target -- */
-    if (!settled && dioramaHost) {
-      haveRx += (wantRx - haveRx) * 0.09;
-      haveRy += (wantRy - haveRy) * 0.09;
-      dioramaHost.style.setProperty('--rx', r2(haveRx) + 'deg');
-      dioramaHost.style.setProperty('--ry', r2(haveRy) + 'deg');
-      if (Math.abs(wantRx - haveRx) < 0.02 && Math.abs(wantRy - haveRy) < 0.02) {
-        settled = true;
-      }
-    }
+    if (hud) hud.classList.toggle('is-on', p > 0.004);
+    if (rail) rail.classList.toggle('is-on', p > 0.004);
   }
 
   /* ---------------------------------------------------------- ticking */
   var frame = null;
 
-  function run() {
-    frame = null;
-    update();
-    if (!settled) request();
-  }
+  function run() { frame = null; update(); }
 
+  /* Re-request rather than skip: guarding with "only if nothing is
+     pending" means one dropped frame leaves the flag set and every
+     later scroll is ignored for good. */
   function request() {
-    if (frame === null) frame = window.requestAnimationFrame(run);
+    if (frame !== null) window.cancelAnimationFrame(frame);
+    frame = window.requestAnimationFrame(run);
   }
 
   window.addEventListener('scroll', request, { passive: true });
   window.addEventListener('resize', function () { measure(); request(); });
   window.addEventListener('orientationchange', function () {
-    setTimeout(function () { measure(); request(); }, 120);
+    setTimeout(function () { measure(); request(); }, 150);
   });
 
-  /* pause instruments while the tab is in the background */
-  document.addEventListener('visibilitychange', function () {
-    if (!instruments) return;
-    if (document.hidden) instruments.stopAll();
-    else if (activeFloor) instruments.start(activeFloor);
-  });
+  /* ---------------------------------------------------------- orb life */
+  /* Run the core only while it is on screen, and never while the
+     tab is in the background. */
+  var stageVisible = true;
+
+  function syncOrb() {
+    if (!orb) return;
+    if (stageVisible && !document.hidden) orb.start();
+    else orb.stop();
+  }
+
+  if ('IntersectionObserver' in window && stage) {
+    new IntersectionObserver(function (entries) {
+      stageVisible = entries[0].isIntersecting;
+      syncOrb();
+    }, { threshold: 0 }).observe(stage);
+  }
+
+  document.addEventListener('visibilitychange', syncOrb);
 
   /* ---------------------------------------------------------- reveals */
   var revealables = toArray(document.querySelectorAll('.reveal'));
@@ -281,22 +200,21 @@
         io.unobserve(entry.target);
       });
     }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
-
     revealables.forEach(function (el) { io.observe(el); });
   } else {
     revealables.forEach(function (el) { el.classList.add('is-in'); });
   }
 
   /* ---------------------------------------------------------- jump links */
-  /* Anchor navigation would put a beat's top at the viewport top,
-     which only matches the camera stop when the beat is exactly one
-     screen tall. Scroll to the measured anchor instead. */
+  /* An anchor would put a panel's top at the viewport top, which
+     only matches its beat when the panel is exactly one screen
+     tall. Scroll to the measured anchor instead. */
   toArray(document.querySelectorAll('a[href^="#beat-"]')).forEach(function (link) {
     link.addEventListener('click', function (ev) {
       var id = link.getAttribute('href').slice(1);
       var n = -1;
-      for (var i = 0; i < beats.length; i++) {
-        if (beats[i].id === id) { n = i; break; }
+      for (var i = 0; i < panels.length; i++) {
+        if (panels[i].id === id) { n = i; break; }
       }
       if (n < 0) return;
       ev.preventDefault();
@@ -310,9 +228,10 @@
 
   /* ---------------------------------------------------------- go */
   measure();
+  lastY = window.pageYOffset || 0;
   update();
+  syncOrb();
 
-  /* re-measure once fonts and layout have settled */
   window.addEventListener('load', function () { measure(); request(); });
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { measure(); request(); });
