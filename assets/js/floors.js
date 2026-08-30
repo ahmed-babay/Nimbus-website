@@ -18,7 +18,7 @@ window.NIMBUS_WORLD = {
 window.NIMBUS_FLOORS = [
   {
     id: 'hero', no: '', name: 'Approach',
-    cam: { x: -599, y: 4740, w: 2399, h: 1560 }
+    cam: { x: -784, y: 4500, w: 2768, h: 1800 }
   },
   {
     id: 'radio', no: '01', name: 'Radio room',

@@ -108,8 +108,8 @@
 .sweep {
   transform-box: fill-box;
   transform-origin: 0% 50%;
-  fill: var(--beacon-glow);
-  opacity: calc(var(--beacon-sweep) * .5);
+  fill: url(#beamGrad);
+  opacity: calc(var(--beacon-sweep) * .8);
   animation: sweep 7s linear infinite;
   transition: opacity .6s var(--ease);
 }

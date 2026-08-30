@@ -108,6 +108,12 @@
           <stop offset="1"   class="s3"/>
         </linearGradient>
 
+        <linearGradient id="beamGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0"   class="g-mid" stop-opacity=".6"/>
+          <stop offset=".45" class="g-mid" stop-opacity=".22"/>
+          <stop offset="1"   class="g-mid" stop-opacity="0"/>
+        </linearGradient>
+
         <radialGradient id="halo">
           <stop offset="0"   class="g-core"/>
           <stop offset=".22" class="g-mid" stop-opacity=".75"/>
@@ -550,14 +556,14 @@
                   </g>
                   <path class="st-accent baro-trace" stroke-width="3" stroke-linecap="round" fill="none"
                         d="M456 186 C 500 178 520 148 556 152 C 596 156 614 118 652 110 C 686 103 706 122 726 116"/>
-                  <text x="452" y="248" class="r-metal" font-family="ui-monospace, monospace" font-size="13">1013 hPa</text>
+                  <text x="452" y="256" class="r-metal2" font-family="ui-monospace, monospace" font-size="15">1013 hPa</text>
                 </svg>
               </div>
 
               <div class="layer" style="--zn:-20">
                 <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
                   <!-- three instrument dials -->
-                  <g transform="translate(150 396)">
+                  <g transform="translate(150 352)">
                     <circle class="r-metal2" r="78"/>
                     <circle class="r-paper" r="66"/>
                     <g class="st-line" stroke-width="3" stroke-linecap="round" opacity=".55">
@@ -570,7 +576,7 @@
                     <text y="46" text-anchor="middle" class="r-metal2" font-family="ui-monospace, monospace" font-size="13">°C</text>
                   </g>
 
-                  <g transform="translate(330 424)">
+                  <g transform="translate(332 380)">
                     <circle class="r-metal2" r="62"/>
                     <circle class="r-paper" r="52"/>
                     <g transform="translate(0 10)">
@@ -581,8 +587,8 @@
                   </g>
 
                   <!-- anemometer -->
-                  <g transform="translate(506 386)">
-                    <path class="st-metal" stroke-width="6" fill="none" d="M0 0 L0 92"/>
+                  <g transform="translate(506 336)">
+                    <path class="st-metal" stroke-width="6" fill="none" d="M0 0 L0 108"/>
                     <g class="anemo">
                       <g class="r-metal">
                         <path d="M0 0 L44 -12 A 15 15 0 0 0 44 12 Z"/>
@@ -594,7 +600,7 @@
                   </g>
 
                   <!-- radar / traffic scope -->
-                  <g transform="translate(672 396)">
+                  <g transform="translate(672 352)">
                     <circle class="r-dark" r="82"/>
                     <circle class="r-screen" r="72"/>
                     <g class="st-ink" stroke-width="1.5" fill="none" opacity=".4">
