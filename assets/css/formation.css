@@ -1,0 +1,76 @@
+/* ============================================================
+   Nimbus - the formation intro.
+
+   Two classes on <html> drive the whole handoff:
+
+     .is-intro     the page is held back: near-black, no core,
+                   no backdrop, no hero copy
+     .is-igniting  the real core fades up underneath the
+                   collapsing particle shell
+
+   Removing .is-intro hands the hero back to the site's own
+   reveal language - the existing .reveal transition and its
+   per-element --rd stagger replay untouched, because nothing
+   here changes them, it only holds their computed values.
+
+   Selectors are written as html.is-intro so they outrank the
+   base rules on specificity rather than on file order.
+   ============================================================ */
+
+/* ---------------------------------------------------------- canvas */
+.formation {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50;              /* over the stage and copy, under the chrome */
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity .5s linear;
+}
+.formation.is-done { opacity: 0; }
+
+/* ---------------------------------------------------------- held back */
+#orb {
+  transition: opacity .55s var(--ease);
+}
+html.is-intro #orb { opacity: 0; }
+
+/* the core rises under the shell before the particles are gone,
+   so the two are briefly on screen together and the swap reads
+   as the particles becoming the orb */
+html.is-intro.is-igniting #orb { opacity: 1; }
+
+.field,
+.topbar,
+.cue {
+  transition: opacity .9s var(--ease);
+}
+html.is-intro .field  { opacity: 0; }
+html.is-intro .topbar { opacity: 0; }
+html.is-intro .cue    { opacity: 0; }
+
+/* Hold the hero copy at its pre-reveal values. The transition is
+   left alone, so releasing the class animates it in on the site's
+   existing timing and stagger. */
+html.is-intro .beat--open .reveal {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+/* ---------------------------------------------------------- reduced motion */
+/* The sequence is skipped in JS, but if the class ever lands
+   anyway nothing should stay hidden. */
+@media (prefers-reduced-motion: reduce) {
+  .formation { display: none; }
+
+  html.is-intro #orb,
+  html.is-intro .field,
+  html.is-intro .topbar,
+  html.is-intro .cue { opacity: 1; }
+
+  html.is-intro .beat--open .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

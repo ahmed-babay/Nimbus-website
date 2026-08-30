@@ -15,11 +15,30 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/css/core.css">
 <link rel="stylesheet" href="assets/css/stage.css">
+<link rel="stylesheet" href="assets/css/formation.css">
 
 <script>
   /* Set before first paint so the reveal states are armed. With
      scripting off this never runs and everything stays visible. */
-  document.documentElement.classList.add('js');
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+
+    /* Arm the opening sequence here rather than in formation.js, so
+       the page is never painted once un-held and then blacked out. */
+    var calm = false;
+    try {
+      calm = window.matchMedia &&
+             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) {}
+
+    if (!calm) {
+      d.classList.add('is-intro');
+      /* Backstop: if formation.js fails to load or throws, the hero
+         must not stay hidden. Independent of that script. */
+      setTimeout(function () { d.classList.remove('is-intro'); }, 6000);
+    }
+  })();
 </script>
 </head>
 <body id="top">
@@ -452,5 +471,6 @@
 <script src="assets/js/beats.js"></script>
 <script src="assets/js/orb.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/formation.js"></script>
 </body>
 </html>
