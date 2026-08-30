@@ -230,10 +230,10 @@
   background: var(--t-edge);
   box-shadow: 0 1px 0 rgba(255, 255, 255, .25);
 }
-.cutaway__rivet:nth-child(1) { top: .95rem; left: .95rem; }
-.cutaway__rivet:nth-child(2) { top: .95rem; right: .95rem; }
-.cutaway__rivet:nth-child(3) { bottom: .95rem; left: .95rem; }
-.cutaway__rivet:nth-child(4) { bottom: .95rem; right: .95rem; }
+.cutaway__rivet:nth-of-type(1) { top: .95rem; left: .95rem; }
+.cutaway__rivet:nth-of-type(2) { top: .95rem; right: .95rem; }
+.cutaway__rivet:nth-of-type(3) { bottom: .95rem; left: .95rem; }
+.cutaway__rivet:nth-of-type(4) { bottom: .95rem; right: .95rem; }
 
 /* floor plate label riveted to the frame */
 .cutaway__plate {
@@ -258,7 +258,7 @@
    hidden inside cloud rather than cutting on screen. */
 .fogbank {
   position: absolute; inset: -2%;
-  z-index: 4;
+  z-index: 20;
   pointer-events: none;
   opacity: var(--fog);
   backdrop-filter: blur(calc(var(--fog) * 22px)) saturate(calc(1 - var(--fog) * .45));

@@ -194,7 +194,7 @@
 
 .radar-arm {
   transform-box: fill-box;
-  transform-origin: center;
+  transform-origin: 0% 50%;
   animation: spin 4.4s linear infinite;
 }
 

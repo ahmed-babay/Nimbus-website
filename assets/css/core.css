@@ -440,3 +440,101 @@ kbd {
   color: var(--fg);
 }
 .btn--ghost:hover { border-color: var(--accent); }
+
+/* ---------------------------------------------------------- ground level */
+/* Everything after the ascent: plain document flow again. */
+.wrap {
+  width: min(72rem, 100%);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+.outro {
+  position: relative;
+  z-index: 2;
+  padding: clamp(4rem, 10vh, 7rem) 0 clamp(3rem, 7vh, 5rem);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+.outro h2 { font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.4rem); }
+
+.grid {
+  margin-top: 2.4rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+}
+
+.panel {
+  padding: clamp(1.1rem, 2vw, 1.6rem);
+  border: 1px solid var(--line);
+  border-radius: .85rem;
+  background: color-mix(in srgb, var(--card-solid) 55%, transparent);
+}
+.panel h3 {
+  font-size: .78rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.panel .ticks { margin-top: 0; }
+.panel--wide { margin-top: 1rem; }
+
+.deflist { margin: 0; display: grid; gap: .8rem; }
+.deflist dt { display: flex; gap: .25rem; flex-wrap: wrap; }
+.deflist dd {
+  margin: .25rem 0 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.code {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: .6rem;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  font-family: var(--mono);
+  font-size: .84rem;
+  line-height: 1.85;
+}
+.code .cmt { color: var(--muted); }
+code {
+  font-family: var(--mono);
+  font-size: .88em;
+  padding: .08rem .3rem;
+  border-radius: .25rem;
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+.code code { padding: 0; background: none; }
+
+.note {
+  margin-top: .9rem;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+.foot {
+  position: relative;
+  z-index: 2;
+  padding: 2rem 0 3rem;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  font-size: .88rem;
+  color: var(--muted);
+}
+.foot__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.foot b { color: var(--fg); }
+.foot__links { display: flex; gap: 1.2rem; }
+.foot a { text-decoration-color: var(--line); text-underline-offset: 3px; }
+.foot a:hover { color: var(--accent); }
