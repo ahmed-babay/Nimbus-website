@@ -27,6 +27,7 @@ window.NimbusOrb = (function () {
   'use strict';
 
   var TAU = Math.PI * 2;
+  var current = null;
 
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -466,9 +467,24 @@ window.NimbusOrb = (function () {
         if (raf !== null) { window.cancelAnimationFrame(raf); raf = null; }
       },
 
-      isCalm: function () { return calm; }
+      isCalm: function () { return calm; },
+
+      /* Read-only view of where the core sits on screen, in CSS
+         pixels relative to its own canvas box. The formation intro
+         lands its particle shell on exactly this centre and radius
+         so the handoff has no visible jump. */
+      metrics: function () { return { cx: cx, cy: cy, r: R }; }
     };
   }
 
-  return { create: create };
+  return {
+    create: function (canvas) {
+      var api = create(canvas);
+      if (api) current = api;
+      return api;
+    },
+    /* the most recently created core, for modules that need to
+       line up with it without app.js having to hand it over */
+    current: function () { return current; }
+  };
 })();
