@@ -33,7 +33,8 @@
 .st-ink    { stroke: var(--r-ink); fill: none; }
 .st-accent { stroke: var(--r-accent); fill: none; }
 .st-dark   { stroke: var(--r-dark); fill: none; }
-.st-line, .st-metal, .st-brass, .st-ink, .st-accent, .st-dark {
+.st-metal2 { stroke: var(--r-metal2); fill: none; }
+.st-line, .st-metal, .st-brass, .st-ink, .st-accent, .st-dark, .st-metal2 {
   transition: stroke .6s var(--ease);
 }
 
@@ -42,11 +43,13 @@
 .r-sky-2 { fill: var(--sky-3); transition: fill .6s var(--ease); }
 .r-cloud { fill: var(--cloud-a); opacity: calc(var(--cloud-op) * .9); transition: fill .6s var(--ease); }
 
-/* pooled lamplight, much stronger at night */
-.lamplight {
-  fill: var(--r-lamp);
-  transition: fill .6s var(--ease);
-}
+/* Pooled lamplight. A flat ellipse reads as a smudge, so this is a
+   shared radial gradient (defined once in the markup) that actually
+   falls off at the edges. Much stronger at night. */
+.lamp-0 { stop-color: var(--r-lamp); }
+.lamp-1 { stop-color: var(--r-lamp); stop-opacity: .4; }
+.lamp-2 { stop-color: var(--r-lamp); stop-opacity: 0; }
+.lamplight { fill: url(#lampGrad); }
 
 /* ---------------------------------------------------------- 01 radio room */
 .wave rect {

@@ -1302,26 +1302,34 @@ npm run dev</code></pre>
 
 <script src="assets/js/floors.js"></script>
 <script src="assets/js/instruments.js"></script>
-<script src="assets/js/app.js"></script>
+
 <script>
 (function(){
-  var m=/[?&]at=([0-9.]+)/.exec(location.search);
-  if(!m) return;
-  var at=parseFloat(m[1]);
-  history.scrollRestoration="manual";
-  document.documentElement.style.scrollBehavior="auto";
-  function go(){
-    var a=document.getElementById("ascent");
-    var span=a.offsetHeight-window.innerHeight;
-    window.scrollTo(0, a.offsetTop + at*span);
-    window.dispatchEvent(new Event("scroll"));
-    var d=document.getElementById("dbg")||document.createElement("div");
-    d.id="dbg";
-    d.style.cssText="position:fixed;left:8px;bottom:8px;z-index:9999;background:#000;color:#0f0;font:11px monospace;padding:4px 7px";
-    d.textContent="y="+Math.round(window.scrollY)+" ascentTop="+a.offsetTop+" ascentH="+a.offsetHeight+" vh="+window.innerHeight+" doc="+document.documentElement.scrollHeight;
-    document.body.appendChild(d);
+  var m=/[?&]floor=([a-z]+)/.exec(location.search);
+  var id=m?m[1]:"radio";
+  var F=window.NIMBUS_FLOORS;
+  var n=0; for(var i=0;i<F.length;i++) if(F[i].id===id) n=i;
+  var c=F[n].cam;
+  document.getElementById("camera").setAttribute("viewBox",c.x+" "+c.y+" "+c.w+" "+c.h);
+  var B=window.NIMBUS_BANDS, bands=document.querySelectorAll("#camera .band");
+  for(var k=0;k<bands.length;k++){
+    bands[k].setAttribute("transform","translate(0 "+((c.y-B[k].ref)*B[k].par).toFixed(1)+")");
   }
-  window.addEventListener("load",function(){ go(); setTimeout(go,80); setTimeout(go,400); });
+  var cut=document.getElementById("cutaway");
+  var inner = n>0 && n<F.length-1;
+  cut.style.setProperty("--frame-op", inner?"1":"0");
+  cut.style.setProperty("--frame-scale","1");
+  document.querySelectorAll(".diorama").forEach(function(d){
+    d.classList.toggle("is-active", d.getAttribute("data-floor")===id);
+  });
+  document.querySelectorAll(".win").forEach(function(w){
+    w.classList.toggle("is-lit", w.getAttribute("data-win")===id);
+  });
+  document.getElementById("plateNo").textContent=F[n].no||"--";
+  document.getElementById("plateName").textContent=F[n].name;
+  document.querySelectorAll(".reveal").forEach(function(e){ e.classList.add("is-in"); });
+  var s=document.getElementById("script"); if(s) s.style.visibility="hidden";
+  var inst=window.NimbusInstruments.init(); inst.start(id);
 })();
 </script>
 </body>

@@ -77,6 +77,8 @@
   transition: fill .6s var(--ease);
 }
 
+.st-tedge { stroke: var(--t-edge); fill: none; transition: stroke .6s var(--ease); }
+
 .glass   { fill: var(--glass); transition: fill .6s var(--ease); }
 .glass-2 { fill: var(--glass-2); transition: fill .6s var(--ease); }
 
@@ -279,13 +281,18 @@
 .dioramas {
   position: absolute; inset: 0;
   z-index: 3;
-  perspective: 1000px;
-  perspective-origin: 50% 50%;
 }
 
+/* The perspective lives here, not on .dioramas. A plain element
+   between the perspective holder and the transformed layers would
+   flatten the 3D context, and translateZ would quietly do nothing
+   while the counter-scale still applied - which magnifies the far
+   layers and shrinks the foreground. */
 .diorama {
   position: absolute; inset: 0;
   margin: 0;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
   opacity: 0;
   visibility: hidden;
   transition: opacity .5s var(--ease), visibility .5s;
