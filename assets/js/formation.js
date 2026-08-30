@@ -34,7 +34,10 @@
 window.NimbusFormation = (function () {
   'use strict';
 
-  var DURATION = 3000;     /* ms of particle sequence */
+  /* Timing. The gather is the stretch between the first particle
+     moving and ignition - at these numbers it runs ~440ms to
+     ~2010ms, then the burst carries the rest. */
+  var DURATION = 2300;     /* ms of particle sequence */
   var SHELL_AT = 0.86;     /* progress at which the shell is whole */
 
   /* ---------------------------------------------------------- shaders */
@@ -73,7 +76,7 @@ window.NimbusFormation = (function () {
     '}',
 
     'void main() {',
-    '  float delay   = mix(0.16, 0.34, aParam.x);',
+    '  float delay   = mix(0.19, 0.36, aParam.x);',
     '  float depth   = aParam.z;',
     '  float variety = aParam.w;',
 
