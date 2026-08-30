@@ -34,11 +34,25 @@
 window.NimbusFormation = (function () {
   'use strict';
 
-  /* Timing. The gather is the stretch between the first particle
-     moving and ignition - at these numbers it runs ~440ms to
-     ~2010ms, then the burst carries the rest. */
-  var DURATION = 2300;     /* ms of particle sequence */
-  var SHELL_AT = 0.86;     /* progress at which the shell is whole */
+  /* Timing. Two numbers set the whole sequence; every phase below
+     is derived from them, so changing the speed stays a one-liner.
+
+       drift   0    -> DRIFT      ambient, suspended
+       gather  DRIFT -> SHELL_AT  the rush inward
+       burst   SHELL_AT -> 1      compression, ignition, debris
+
+     At these values: drift ~300ms, gather ~480ms, burst ~350ms,
+     plus the CSS shockwave carrying ~780ms past the end. */
+  var DURATION = 1120;     /* ms of particle sequence */
+  var DRIFT    = 0.27;     /* progress at which the first particle moves */
+  var SHELL_AT = 0.69;     /* progress at which the shell is whole */
+
+  var IG0   = SHELL_AT - 0.005;   /* compression begins */
+  var IG1   = SHELL_AT + 0.090;   /* fully ignited */
+  var SPARK = SHELL_AT + 0.010;   /* debris starts leaving */
+  var FADE  = 0.86;               /* the field begins to fade out */
+
+  function n3(v) { return v.toFixed(3); }
 
   /* ---------------------------------------------------------- shaders */
   var VERT = [
@@ -76,7 +90,7 @@ window.NimbusFormation = (function () {
     '}',
 
     'void main() {',
-    '  float delay   = mix(0.19, 0.36, aParam.x);',
+    '  float delay   = mix(' + n3(DRIFT) + ', ' + n3(DRIFT + 0.15) + ', aParam.x);',
     '  float depth   = aParam.z;',
     '  float variety = aParam.w;',
 
@@ -125,7 +139,7 @@ window.NimbusFormation = (function () {
        whole field flares, and about a tenth of it rebounds back
        out as sparks. The swap to the real core happens inside
        that flare, so there is no cross-fade to catch. */
-    '  float ig  = smoothstep(0.855, 0.925, uProgress);',
+    '  float ig  = smoothstep(' + n3(IG0) + ', ' + n3(IG1) + ', uProgress);',
     '  float ig2 = ig * ig;',
 
     /* angular momentum spikes as the radius collapses */
@@ -138,8 +152,8 @@ window.NimbusFormation = (function () {
     /* sparks thrown back out by the ignition */
     /* staggered launch, so debris leaves in waves rather than as
        one expanding ring */
-    '  float lag    = 0.884 + aSeed.z * 0.030;',
-    '  float sparkT = clamp((uProgress - lag) / 0.106, 0.0, 1.0);',
+    '  float lag    = ' + n3(SPARK) + ' + aSeed.z * 0.040;',
+    '  float sparkT = clamp((uProgress - lag) / ' + n3(1.0 - SPARK - 0.02) + ', 0.0, 1.0);',
     '  float sparkE = sparkT * (2.0 - sparkT);',
     '  float spark  = step(0.86, variety) * sparkE;',
     /* debris is flung well past the core, at its own speed */
@@ -160,11 +174,11 @@ window.NimbusFormation = (function () {
 
     '  float sz = mix(1.00, 3.30, variety) * (0.45 + depth * 1.25);',
     '  sz *= 1.0 + 1.20 * smoothstep(0.80, 0.98, uProgress);',
-    '  sz *= 1.0 + 0.50 * ig * (1.0 - smoothstep(0.90, 1.0, uProgress));',
+    '  sz *= 1.0 + 0.50 * ig * (1.0 - smoothstep(' + n3(FADE - 0.12) + ', 1.0, uProgress));',
     '  gl_PointSize = max(1.0, sz * uDpr);',
 
     '  float tw = 0.78 + 0.22 * sin(uTime * mix(0.8, 2.4, variety) + aSeed.x * TAU);',
-    '  float flare = 1.0 + 4.2 * ig * (1.0 - smoothstep(0.895, 0.99, uProgress));',
+    '  float flare = 1.0 + 4.2 * ig * (1.0 - smoothstep(' + n3(SPARK + 0.02) + ', 0.99, uProgress));',
     '  vBright = (0.45 + depth * 1.05) * tw',
     '          * (0.50 + 0.80 * smoothstep(0.0, 0.55, t))',
     '          * flare * (1.0 - spark * 0.45);',
@@ -412,13 +426,13 @@ window.NimbusFormation = (function () {
       gl.uniform2f(U.uMouse, mx, my);
       gl.uniform1f(U.uMouseOn, mouseOn);
       /* hold full brightness through the shell, then hand over */
-      gl.uniform1f(U.uFade, 1 - Math.pow(Math.max(0, (p - 0.925) / 0.075), 1.3));
+      gl.uniform1f(U.uFade, 1 - Math.pow(Math.max(0, (p - FADE) / (1 - FADE)), 1.3));
       gl.drawArrays(gl.POINTS, 0, COUNT);
 
       /* One instant, not a cross-fade: the shell arrives, the page
          flashes, a shockwave leaves the core, the real plasma is
          told to surge, and the orb is brought up inside the flash. */
-      if (!ignited && p >= 0.875) {
+      if (!ignited && p >= SPARK) {
         ignited = true;
         burst(orb.metrics());
         if (orb.surge) orb.surge(0.55);
