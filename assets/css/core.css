@@ -224,6 +224,10 @@ button { font: inherit; color: inherit; }
 }
 @media (max-width: 64rem) { .rail { display: none; } }
 
+/* On narrow screens the panel reaches the bottom of the screen,
+   so the HUD would sit underneath it. */
+@media (max-width: 62rem) { .hud { display: none; } }
+
 /* ---------------------------------------------------------- prose */
 .eyebrow {
   display: flex; align-items: center; gap: .6rem;
