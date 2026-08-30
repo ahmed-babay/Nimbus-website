@@ -459,3 +459,7 @@
   }
   .fogbank { display: none; }
 }
+
+/* Cloud decks. No paint of their own - this is the hook app.js
+   moves each deck by, at its own share of the camera travel. */
+.band { will-change: transform; }
