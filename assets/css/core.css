@@ -218,7 +218,6 @@ button { font: inherit; color: inherit; }
 .rail a:hover { color: var(--ink); }
 .rail a:hover span { opacity: 1; transform: none; }
 .rail .is-current { color: rgb(var(--beam-2)); }
-.rail .is-current span { opacity: 1; transform: none; }
 .rail .is-current i {
   width: 2.4rem; opacity: 1;
   box-shadow: 0 0 12px rgb(var(--beam) / .9);
@@ -253,13 +252,14 @@ button { font: inherit; color: inherit; }
   font-size: .93rem;
 }
 .ticks li {
-  display: grid; grid-template-columns: .95rem 1fr;
-  gap: .6rem; align-items: start;
+  position: relative;
+  padding-left: 1.45rem;
   color: var(--dim);
 }
 .ticks li::before {
   content: "";
-  margin-top: .56rem;
+  position: absolute;
+  left: .1rem; top: .62em;
   width: .34rem; height: .34rem;
   border-radius: 1px;
   background: rgb(var(--beam));
