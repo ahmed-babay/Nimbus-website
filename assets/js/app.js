@@ -119,7 +119,10 @@
     var charge = lerp(A.charge, B.charge, t);
     var intensity = charge * lerp(0.42, 1, peak);
 
-    if (orb) orb.set(mix, intensity);
+    /* the core sits high and central on the opening and closing
+       beats, and slides aside for the feature panels between */
+    var aim = clamp(Math.min(u, LAST - u), 0, 1);
+    if (orb) orb.set(mix, intensity, aim);
 
     /* -- scrolling hard whips the storm up -- */
     var dy = Math.abs(y - lastY);

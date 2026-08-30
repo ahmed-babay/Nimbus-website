@@ -82,11 +82,13 @@ window.NimbusOrb = (function () {
       a[2] = -a[2]; b[2] = -b[2];
     }
 
-    scaleTo(a, rand(0.62, 0.99));
-    scaleTo(b, rand(0.62, 0.99));
+    /* spread the endpoints through the volume, not just near the
+       shell, or every strike reads as a ring around the equator */
+    scaleTo(a, rand(0.34, 0.98));
+    scaleTo(b, rand(0.34, 0.98));
 
     var pts = [a];
-    fracture(a, b, 4, rand(0.30, 0.52), pts);
+    fracture(a, b, 5, rand(0.20, 0.38), pts);
 
     return {
       pts: pts,
@@ -104,7 +106,7 @@ window.NimbusOrb = (function () {
     var b = onSphere();
     scaleTo(b, rand(0.5, 0.98));
     var out = [a];
-    fracture(a, b, 3, 0.30, out);
+    fracture(a, b, 4, 0.22, out);
     return out;
   }
 
@@ -116,7 +118,7 @@ window.NimbusOrb = (function () {
     scaleTo(a, rand(0.45, 0.94));
     scaleTo(b, rand(0.45, 0.94));
     var pts = [a];
-    fracture(a, b, 3, rand(0.22, 0.40), pts);
+    fracture(a, b, 4, rand(0.16, 0.30), pts);
     return {
       pts: pts,
       spin: rand(-0.16, 0.16),
@@ -124,7 +126,7 @@ window.NimbusOrb = (function () {
       pulse: rand(0.5, 1.5),
       life: rand(2600, 6200),
       born: 0,
-      width: rand(0.6, 1.5)
+      width: rand(0.7, 1.8)
     };
   }
 
@@ -141,6 +143,7 @@ window.NimbusOrb = (function () {
 
     var spin = 0;
     var tilt = -0.30;
+    var aim = 0;          /* 0 = centred over the copy, 1 = pushed aside */
     var last = 0;
     var raf = null;
     var running = false;
@@ -155,7 +158,7 @@ window.NimbusOrb = (function () {
     var intensity = 0.6;
     var boost = 0;
 
-    for (var f = 0; f < 16; f++) filaments.push(makeFilament());
+    for (var f = 0; f < 24; f++) filaments.push(makeFilament());
     for (var m = 0; m < 90; m++) {
       motes.push({
         p: scaleTo(onSphere(), rand(1.08, 2.5)),
@@ -176,18 +179,30 @@ window.NimbusOrb = (function () {
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      place();
+    }
 
+    /* Two framings, blended by `aim`: on the opening and closing
+       beats the core sits high with the copy beneath it; on the
+       feature beats it slides aside to make room for the panel. */
+    function place() {
       var narrow = W < 992;
+      var a = aim * aim * (3 - 2 * aim);
+      var fx, fy, fr;
+
       if (narrow) {
-        cx = W * 0.5;
-        cy = H * 0.37;
-        R = Math.min(W * 0.40, H * 0.26);
+        fx = 0.5;
+        fy = 0.27 + a * 0.04;
+        fr = Math.min(W * (0.33 + a * 0.03), H * (0.185 + a * 0.025));
       } else {
-        cx = W * 0.39;
-        cy = H * 0.5;
-        R = Math.min(W * 0.23, H * 0.36);
+        fx = 0.5 - a * 0.16;
+        fy = 0.265 + a * 0.235;
+        fr = Math.min(W * (0.15 + a * 0.065), H * (0.198 + a * 0.137));
       }
-      R = Math.max(70, R);
+
+      cx = W * fx;
+      cy = H * fy;
+      R = Math.max(64, fr);
     }
 
     /* ------------------------------------------------------ project */
@@ -265,9 +280,9 @@ window.NimbusOrb = (function () {
 
       var body = ctx.createRadialGradient(
         cx - R * 0.22, cy - R * 0.26, R * 0.05, cx, cy, R);
-      body.addColorStop(0, 'rgba(10,16,30,0.86)');
-      body.addColorStop(0.62, 'rgba(5,8,17,0.94)');
-      body.addColorStop(1, 'rgba(2,4,9,0.99)');
+      body.addColorStop(0, 'rgba(9,15,30,0.42)');
+      body.addColorStop(0.58, 'rgba(5,9,19,0.72)');
+      body.addColorStop(1, 'rgba(2,4,10,0.94)');
       ctx.fillStyle = body;
       ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
 
@@ -287,10 +302,10 @@ window.NimbusOrb = (function () {
         var extra = fl.spin * (now * 0.0004);
         var z = strokePath(fl.pts, extra);
         var d = depthFade(z);
-        var a = 0.30 * fade * beatY * d * (0.35 + power * 0.75);
+        var a = 0.92 * fade * beatY * d * (0.35 + power * 0.75);
 
-        ctx.strokeStyle = rgba(pal.beam, a * 0.5);
-        ctx.lineWidth = fl.width * 4.5;
+        ctx.strokeStyle = rgba(pal.beam, a * 0.34);
+        ctx.lineWidth = fl.width * 5.5;
         ctx.stroke();
 
         ctx.strokeStyle = rgba(pal.arc, a);
@@ -311,7 +326,7 @@ window.NimbusOrb = (function () {
 
         var zb = strokePath(b.pts, 0);
         var db = depthFade(zb);
-        var ab = env * flicker * db * (0.5 + power * 0.6);
+        var ab = env * flicker * db * (0.62 + power * 0.62);
         var hotc = b.hot ? pal.core : pal.arc;
 
         ctx.strokeStyle = rgba(pal.beam, ab * 0.42);
@@ -339,13 +354,23 @@ window.NimbusOrb = (function () {
 
       /* ---- the white-hot centre ---- */
       var pulse = 0.82 + 0.18 * Math.sin(now * 0.0034) + 0.1 * Math.sin(now * 0.011);
-      var cr = R * (0.30 + power * 0.16) * pulse;
+      var cr = R * (0.52 + power * 0.22) * pulse;
       var core = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
-      core.addColorStop(0, rgba(pal.core, 0.75 * (0.5 + power * 0.5)));
-      core.addColorStop(0.28, rgba(pal.arc, 0.34 * (0.4 + power * 0.6)));
+      core.addColorStop(0, rgba(pal.core, 0.80 * (0.5 + power * 0.5)));
+      core.addColorStop(0.16, rgba(pal.arc, 0.42 * (0.4 + power * 0.6)));
+      core.addColorStop(0.52, rgba(pal.beam, 0.18 * (0.4 + power * 0.6)));
       core.addColorStop(1, rgba(pal.beam, 0));
       ctx.fillStyle = core;
       ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
+
+      /* ---- interior haze: the volume the storm is held in ---- */
+      var fogr = R * 0.98;
+      var fog = ctx.createRadialGradient(cx, cy, R * 0.1, cx, cy, fogr);
+      fog.addColorStop(0, rgba(pal.beam, 0.16 * (0.4 + power * 0.6)));
+      fog.addColorStop(0.55, rgba(pal.beam, 0.10 * (0.4 + power * 0.6)));
+      fog.addColorStop(1, rgba(pal.beam, 0.02));
+      ctx.fillStyle = fog;
+      ctx.fillRect(cx - fogr, cy - fogr, fogr * 2, fogr * 2);
 
       /* ---- inner rim: light catching the inside of the shell ---- */
       var inner = ctx.createRadialGradient(cx, cy, R * 0.74, cx, cy, R);
@@ -360,14 +385,14 @@ window.NimbusOrb = (function () {
       ctx.globalCompositeOperation = 'lighter';
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, TAU);
-      ctx.strokeStyle = rgba(pal.arc, 0.34 + power * 0.24);
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = rgba(pal.arc, 0.16 + power * 0.16);
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       ctx.beginPath();
       ctx.arc(cx, cy, R + 3, 0, TAU);
-      ctx.strokeStyle = rgba(pal.beam, 0.16 + power * 0.14);
-      ctx.lineWidth = 6;
+      ctx.strokeStyle = rgba(pal.beam, 0.10 + power * 0.12);
+      ctx.lineWidth = 7;
       ctx.stroke();
 
       ctx.globalCompositeOperation = 'source-over';
@@ -383,11 +408,11 @@ window.NimbusOrb = (function () {
       spin += dt * 0.00016 * (0.6 + intensity * 0.8);
 
       /* spawn bolts at a rate set by how charged the core is */
-      var rate = (0.9 + Math.pow(clamp(intensity + boost, 0, 1.4), 2) * 11) / 1000;
+      var rate = (7 + Math.pow(clamp(intensity + boost, 0, 1.4), 2) * 62) / 1000;
       spawnDebt += dt * rate;
       while (spawnDebt >= 1) {
         spawnDebt -= 1;
-        if (bolts.length < 26) bolts.push(makeBolt(Math.random() < 0.78));
+        if (bolts.length < 40) bolts.push(makeBolt(Math.random() < 0.78));
       }
 
       boost *= Math.pow(0.9, dt / 16.7);       /* scroll surge decays */
@@ -415,9 +440,10 @@ window.NimbusOrb = (function () {
         if (calm) still();
       },
 
-      set: function (nextPal, nextIntensity) {
+      set: function (nextPal, nextIntensity, nextAim) {
         pal = nextPal;
         intensity = nextIntensity;
+        if (nextAim !== aim) { aim = nextAim; place(); }
         if (calm) still();
       },
 
