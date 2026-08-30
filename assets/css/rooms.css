@@ -139,7 +139,7 @@
 }
 .flap--on { color: #7ff0c4; }
 .flap--late { color: #ff9c6b; }
-.flap.is-turning { animation: flapTurn .11s linear; }
+.flap.is-turning { animation: flapTurn .12s linear infinite; }
 @keyframes flapTurn {
   0%   { transform: perspective(60px) rotateX(0deg); filter: brightness(1); }
   49%  { transform: perspective(60px) rotateX(-78deg); filter: brightness(.45); }
