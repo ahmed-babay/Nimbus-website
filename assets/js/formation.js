@@ -41,9 +41,9 @@ window.NimbusFormation = (function () {
        gather  DRIFT -> SHELL_AT  the rush inward
        burst   SHELL_AT -> 1      compression, ignition, debris
 
-     At these values: drift ~300ms, gather ~480ms, burst ~350ms,
-     plus the CSS shockwave carrying ~780ms past the end. */
-  var DURATION = 1120;     /* ms of particle sequence */
+     At these values: drift ~190ms, gather ~300ms, burst ~215ms,
+     plus the CSS shockwave carrying past the end. */
+  var DURATION = 700;      /* ms of particle sequence */
   var DRIFT    = 0.27;     /* progress at which the first particle moves */
   var SHELL_AT = 0.69;     /* progress at which the shell is whole */
 
@@ -467,7 +467,7 @@ window.NimbusFormation = (function () {
       document.body.appendChild(veil);
       window.setTimeout(function () {
         if (veil.parentNode) veil.parentNode.removeChild(veil);
-      }, 1200);
+      }, 950);
 
       ['flash', 'ring', 'ring2'].forEach(function (kind) {
         var el = document.createElement('div');
@@ -480,7 +480,7 @@ window.NimbusFormation = (function () {
         document.body.appendChild(el);
         window.setTimeout(function () {
           if (el.parentNode) el.parentNode.removeChild(el);
-        }, 1100);
+        }, 950);
       });
     }
 

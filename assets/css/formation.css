@@ -72,7 +72,7 @@ html.is-intro.is-igniting #orb {
     rgba(70, 120, 255, .12) 48%,
     transparent 70%);
   mix-blend-mode: screen;
-  animation: fxFlash .62s cubic-bezier(.15, .8, .3, 1) forwards;
+  animation: fxFlash .48s cubic-bezier(.15, .8, .3, 1) forwards;
 }
 
 .formation-ring,
@@ -86,13 +86,13 @@ html.is-intro.is-igniting #orb {
     rgba(130, 180, 255, .16) 93%,
     transparent 100%);
   mix-blend-mode: screen;
-  animation: fxRing .78s cubic-bezier(.1, .75, .25, 1) forwards;
+  animation: fxRing .64s cubic-bezier(.1, .75, .25, 1) forwards;
 }
 
 /* a second, slower front so the blast has depth rather than
    reading as a single expanding circle */
 .formation-ring2 {
-  animation-duration: 1.25s;
+  animation-duration: 1s;
   animation-delay: .07s;
   opacity: 0;
 }
@@ -112,7 +112,7 @@ html.is-intro.is-igniting #orb {
   mix-blend-mode: screen;
   opacity: 0;
   will-change: opacity;
-  animation: fxVeil .72s cubic-bezier(.1, .8, .3, 1) forwards;
+  animation: fxVeil .56s cubic-bezier(.1, .8, .3, 1) forwards;
 }
 
 @keyframes fxVeil {
