@@ -254,12 +254,14 @@ window.NimbusOrb = (function () {
 
       /* ---- outer atmosphere ---- */
       ctx.globalCompositeOperation = 'lighter';
-      var halo = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R * 2.5);
-      halo.addColorStop(0, rgba(pal.beam, 0.20 + power * 0.16));
-      halo.addColorStop(0.35, rgba(pal.beam, 0.07 + power * 0.06));
+      /* the outer stop is already transparent well before 2.5R, so
+         the fill is kept tight - it is the most expensive one here */
+      var halo = ctx.createRadialGradient(cx, cy, R * 0.55, cx, cy, R * 2.05);
+      halo.addColorStop(0, rgba(pal.beam, 0.21 + power * 0.17));
+      halo.addColorStop(0.38, rgba(pal.beam, 0.07 + power * 0.06));
       halo.addColorStop(1, rgba(pal.beam, 0));
       ctx.fillStyle = halo;
-      ctx.fillRect(cx - R * 2.6, cy - R * 2.6, R * 5.2, R * 5.2);
+      ctx.fillRect(cx - R * 2.05, cy - R * 2.05, R * 4.1, R * 4.1);
 
       /* ---- motes drifting around the core ---- */
       for (var i = 0; i < motes.length; i++) {

@@ -121,8 +121,8 @@
    so draw something that reads as a core rather than a void. */
 .orb-fallback {
   position: absolute;
-  top: 50%; left: 50%;
-  width: min(46vmin, 30rem); aspect-ratio: 1;
+  top: 26.5%; left: 50%;
+  width: min(38vmin, 25rem); aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background:
@@ -159,6 +159,12 @@
   background:
     linear-gradient(rgb(150 180 235 / .04), transparent 55%),
     rgba(6, 11, 22, .55);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  box-shadow: 0 30px 70px -40px rgb(0 0 0 / .95);
+}
+
+.js .beat__panel {
   backdrop-filter: blur(calc(8px + (1 - var(--enter, 0)) * 14px)) saturate(1.15);
   -webkit-backdrop-filter: blur(calc(8px + (1 - var(--enter, 0)) * 14px)) saturate(1.15);
   box-shadow:
@@ -281,6 +287,8 @@
     /* the panel sits directly on top of the orb here, so it
        needs to carry more of its own contrast */
     background: rgba(5, 9, 18, .74);
+  }
+  .js .beat__panel {
     backdrop-filter: blur(calc(14px + (1 - var(--enter, 0)) * 16px)) saturate(1.2);
     -webkit-backdrop-filter: blur(calc(14px + (1 - var(--enter, 0)) * 16px)) saturate(1.2);
   }
@@ -296,7 +304,7 @@
   html { scroll-behavior: auto; }
   .net-pulse, .cue i { animation: none !important; }
   .js .reveal { opacity: 1; transform: none; transition: none; }
-  .beat__panel {
+  .js .beat__panel {
     opacity: 1;
     transform: none;
     backdrop-filter: blur(14px) saturate(1.15);
