@@ -221,7 +221,7 @@
           <rect class="win" data-win="weather" x="562" y="4245" width="77" height="30" rx="3"/>
           <rect class="win" data-win="weather" x="652" y="4245" width="77" height="30" rx="3"/>
           <!-- weather mast -->
-          <path class="t-edge" d="M775 4258 L830 4258 M828 4232 L828 4284" stroke="currentColor" stroke-width="4" fill="none" opacity=".7"/>
+          <path class="st-tedge" d="M775 4258 L830 4258 M828 4232 L828 4284" stroke-width="4" opacity=".7"/>
         </g>
 
         <!-- floor 04 - wire room -->
@@ -267,24 +267,24 @@
         <path class="t-face" d="M522 566 L438 428 L762 428 L678 566 Z"/>
         <path class="glass"  d="M534 552 L460 442 L740 442 L666 552 Z"/>
         <path class="glass-2" d="M534 552 L460 442 L520 442 L560 552 Z" opacity=".55"/>
-        <path class="t-edge" d="M600 442 L600 552 M520 442 L544 552 M680 442 L656 552"
-              stroke="currentColor" stroke-width="4" fill="none" opacity=".55"/>
+        <path class="st-tedge" d="M600 442 L600 552 M520 442 L544 552 M680 442 L656 552"
+              stroke-width="4" opacity=".55"/>
 
         <rect class="t-band" x="422" y="404" width="356" height="26" rx="8"/>
         <rect class="t-edge" x="416" y="396" width="368" height="10" rx="5"/>
 
         <!-- roof railing -->
-        <path class="t-edge" d="M432 396 L432 376 M478 396 L478 376 M524 396 L524 376
+        <path class="st-tedge" d="M432 396 L432 376 M478 396 L478 376 M524 396 L524 376
                                 M570 396 L570 376 M616 396 L616 376 M662 396 L662 376
                                 M708 396 L708 376 M754 396 L754 376 M426 378 L758 378"
-              stroke="currentColor" stroke-width="3.4" fill="none" opacity=".8"/>
+              stroke-width="3.4" opacity=".8"/>
 
         <!-- mast and aerials -->
         <rect class="t-edge" x="594" y="292" width="12" height="112" rx="3"/>
-        <path class="t-edge" d="M560 348 L640 348 M572 322 L628 322"
-              stroke="currentColor" stroke-width="3.4" fill="none" opacity=".85"/>
-        <path class="t-edge" d="M600 292 L560 236 M600 292 L648 244"
-              stroke="currentColor" stroke-width="2.6" fill="none" opacity=".5"/>
+        <path class="st-tedge" d="M560 348 L640 348 M572 322 L628 322"
+              stroke-width="3.4" opacity=".85"/>
+        <path class="st-tedge" d="M600 292 L560 236 M600 292 L648 244"
+              stroke-width="2.6" opacity=".5"/>
 
         <!-- ---------------- the beacon ---------------- -->
         <g transform="translate(600 276)">
@@ -333,6 +333,16 @@
     <div class="cutaway" id="cutaway" aria-hidden="true">
       <div class="cutaway__body">
         <div class="dioramas" id="dioramas">
+
+          <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+            <defs>
+              <radialGradient id="lampGrad">
+                <stop offset="0" class="lamp-0"/>
+                <stop offset=".5" class="lamp-1"/>
+                <stop offset="1" class="lamp-2"/>
+              </radialGradient>
+            </defs>
+          </svg>
 
           <!-- ---------- 01 RADIO ROOM ---------- -->
           <figure class="diorama" data-floor="radio">
@@ -522,7 +532,7 @@
                   <rect class="r-sky-2" x="60" y="228" width="300" height="62"/>
                   <ellipse class="r-cloud" cx="150" cy="112" rx="70" ry="26"/>
                   <ellipse class="r-cloud" cx="286" cy="160" rx="86" ry="28"/>
-                  <rect class="r-metal2" x="52" y="32" width="316" height="266" rx="8" fill="none" stroke="currentColor" stroke-width="12"/>
+                  <rect class="st-metal2" x="52" y="32" width="316" height="266" rx="8" stroke-width="12"/>
                   <path class="r-metal2" d="M206 40 L214 40 L214 290 L206 290 Z"/>
                   <rect class="r-wall2" x="0" y="360" width="800" height="140"/>
                   <rect class="r-shadow" x="0" y="352" width="800" height="14"/>
@@ -825,7 +835,7 @@
                   </g>
                   <rect class="r-sky-1" x="34" y="46" width="180" height="140" rx="5"/>
                   <ellipse class="r-cloud" cx="110" cy="106" rx="56" ry="20"/>
-                  <rect class="r-metal2" x="26" y="38" width="196" height="156" rx="7" fill="none" stroke="currentColor" stroke-width="10"/>
+                  <rect class="st-metal2" x="26" y="38" width="196" height="156" rx="7" stroke-width="10"/>
                   <rect class="r-shadow" x="0" y="360" width="800" height="14"/>
                 </svg>
               </div>
