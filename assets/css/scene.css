@@ -1,0 +1,461 @@
+/* ============================================================
+   Nimbus - the ascent.
+
+   Layout: .ascent holds a sticky 100vh stage, and the copy
+   column is pulled back over it with a negative margin so the
+   scene stays pinned while the text scrolls past it.
+
+   The stage holds three things, back to front:
+     1. #camera   - one tall SVG world; scroll interpolates its
+                    viewBox, which IS the camera move.
+     2. .cutaway  - a window frame holding the seven dioramas,
+                    each a CSS 3D parallax box.
+     3. .fogbank  - backdrop-filter haze that peaks between
+                    floors, hiding the diorama swap.
+   ============================================================ */
+
+.ascent {
+  position: relative;
+  z-index: 1;
+}
+
+.ascent__stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--sky-2);
+  transition: background-color .6s var(--ease);
+}
+
+/* ---------------------------------------------------------- the camera */
+#camera {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+
+/* Sky gradient stops. Presentation attributes cannot take var(),
+   so every themed colour in the SVG is set here by class. */
+.s0 { stop-color: var(--sky-0); }
+.s1 { stop-color: var(--sky-1); }
+.s2 { stop-color: var(--sky-2); }
+.s3 { stop-color: var(--sky-3); }
+
+.g-core { stop-color: var(--beacon-core); }
+.g-mid  { stop-color: var(--beacon-glow); }
+.g-out  { stop-color: var(--beacon-glow); stop-opacity: 0; }
+
+/* clouds ---------------------------------------------------- */
+.cloud-a { fill: var(--cloud-a); opacity: var(--cloud-op); }
+.cloud-b { fill: var(--cloud-b); opacity: calc(var(--cloud-op) * .8); }
+.cloud-a, .cloud-b { transition: fill .6s var(--ease), opacity .6s var(--ease); }
+
+.storm { fill: var(--cloud-b); opacity: var(--storm-op); transition: opacity .6s var(--ease); }
+.storm-2 { fill: var(--cloud-a); opacity: calc(var(--storm-op) * .55); transition: opacity .6s var(--ease); }
+
+.drift { animation: drift 90s linear infinite; }
+.drift--slow { animation-duration: 150s; }
+.drift--fast { animation-duration: 62s; animation-direction: reverse; }
+@keyframes drift {
+  from { transform: translateX(-90px); }
+  to   { transform: translateX(90px); }
+}
+
+/* ground ---------------------------------------------------- */
+.ground   { fill: var(--ground); transition: fill .6s var(--ease); }
+.ground-2 { fill: var(--ground-2); transition: fill .6s var(--ease); }
+.apron-light { fill: var(--win-on); opacity: calc(.25 + var(--storm-op) * .75); }
+
+/* tower ----------------------------------------------------- */
+.t-face { fill: var(--t-face); }
+.t-side { fill: var(--t-side); }
+.t-rib  { fill: var(--t-rib); }
+.t-edge { fill: var(--t-edge); }
+.t-band { fill: var(--t-band); }
+.t-face, .t-side, .t-rib, .t-edge, .t-band {
+  transition: fill .6s var(--ease);
+}
+
+.glass   { fill: var(--glass); transition: fill .6s var(--ease); }
+.glass-2 { fill: var(--glass-2); transition: fill .6s var(--ease); }
+
+.win {
+  fill: var(--win-off);
+  transition: fill .55s var(--ease), filter .55s var(--ease);
+}
+.win.is-lit {
+  fill: var(--win-on);
+  filter: drop-shadow(0 0 7px var(--win-halo));
+}
+
+/* beacon ---------------------------------------------------- */
+.beacon-halo { opacity: calc(.35 + var(--beacon-sweep) * .65); }
+.beacon-core { fill: var(--beacon-core); }
+
+.beacon-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: beaconPulse 3.4s ease-in-out infinite;
+}
+@keyframes beaconPulse {
+  0%, 100% { transform: scale(1); opacity: calc(.4 + var(--beacon-sweep) * .5); }
+  50%      { transform: scale(1.16); opacity: calc(.7 + var(--beacon-sweep) * .3); }
+}
+
+.sweep {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  fill: var(--beacon-glow);
+  opacity: calc(var(--beacon-sweep) * .5);
+  animation: sweep 7s linear infinite;
+  transition: opacity .6s var(--ease);
+}
+.sweep--b { animation-delay: -3.5s; }
+@keyframes sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* weather overlays ------------------------------------------ */
+.rain {
+  position: absolute; inset: -10% -10% -10% -10%;
+  pointer-events: none;
+  opacity: var(--rain-op);
+  background-image:
+    repeating-linear-gradient(104deg,
+      transparent 0 7px,
+      rgba(190, 220, 245, .30) 7px 8px,
+      transparent 8px 15px),
+    repeating-linear-gradient(101deg,
+      transparent 0 13px,
+      rgba(170, 205, 235, .18) 13px 14px,
+      transparent 14px 27px);
+  background-size: 260px 260px, 420px 420px;
+  animation: rainfall 1.05s linear infinite;
+  transition: opacity .6s var(--ease);
+}
+@keyframes rainfall {
+  to { background-position: -66px 260px, -104px 420px; }
+}
+
+.flash {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(120% 70% at 50% 12%,
+              rgba(226, 240, 255, .92), rgba(200, 226, 255, .15) 55%, transparent 78%);
+  mix-blend-mode: screen;
+}
+[data-sky="night"] .flash { animation: flash 13s 4s infinite; }
+@keyframes flash {
+  0%, 5.6%, 100% { opacity: 0; }
+  5.8%  { opacity: .78; }
+  6.1%  { opacity: .06; }
+  6.4%  { opacity: .62; }
+  7.2%  { opacity: 0; }
+  31%   { opacity: 0; }
+  31.3% { opacity: .45; }
+  32%   { opacity: 0; }
+}
+
+/* vignette + altitude haze ---------------------------------- */
+.stage__vignette {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 45%, transparent 46%, rgba(6, 16, 26, .28) 100%);
+}
+
+/* ---------------------------------------------------------- cutaway frame */
+.cutaway {
+  position: absolute;
+  top: 50%;
+  left: 4vw;
+  width: min(52vw, 46rem);
+  aspect-ratio: 8 / 5;
+  transform: translateY(-50%) scale(var(--frame-scale, 1));
+  opacity: var(--frame-op, 0);
+  border-radius: 1.1rem;
+  transition: opacity .45s var(--ease);
+  will-change: opacity, transform;
+}
+
+.cutaway__body {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--r-wall2);
+  box-shadow:
+    0 40px 90px -34px rgba(4, 14, 24, .75),
+    0 0 0 1px rgba(255, 255, 255, .10) inset;
+  transition: background-color .6s var(--ease);
+}
+
+/* the metal window surround */
+.cutaway__frame {
+  position: absolute; inset: 0;
+  z-index: 6;
+  border-radius: inherit;
+  pointer-events: none;
+  border: .55rem solid var(--t-side);
+  box-shadow:
+    0 0 0 1px var(--t-edge),
+    0 0 0 1px var(--t-edge) inset,
+    0 14px 34px -18px rgba(0, 0, 0, .7) inset;
+  transition: border-color .6s var(--ease), box-shadow .6s var(--ease);
+}
+
+/* glass sheen across the opening */
+.cutaway__glass {
+  position: absolute; inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(114deg,
+      rgba(255, 255, 255, .16) 0%,
+      rgba(255, 255, 255, .04) 26%,
+      transparent 42%,
+      transparent 68%,
+      rgba(255, 255, 255, .07) 84%,
+      rgba(255, 255, 255, .015) 100%);
+  mix-blend-mode: screen;
+}
+
+/* corner rivets */
+.cutaway__rivet {
+  position: absolute; z-index: 7;
+  width: .42rem; height: .42rem;
+  border-radius: 50%;
+  background: var(--t-edge);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+}
+.cutaway__rivet:nth-child(1) { top: .95rem; left: .95rem; }
+.cutaway__rivet:nth-child(2) { top: .95rem; right: .95rem; }
+.cutaway__rivet:nth-child(3) { bottom: .95rem; left: .95rem; }
+.cutaway__rivet:nth-child(4) { bottom: .95rem; right: .95rem; }
+
+/* floor plate label riveted to the frame */
+.cutaway__plate {
+  position: absolute; z-index: 8;
+  left: 1.6rem; bottom: -.85rem;
+  display: flex; align-items: center; gap: .5rem;
+  padding: .3rem .7rem;
+  border: 1px solid var(--t-edge);
+  border-radius: .3rem;
+  background: var(--t-band);
+  color: var(--r-dark);
+  font-family: var(--mono); font-size: .66rem;
+  letter-spacing: .14em; text-transform: uppercase;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .6);
+  transition: background-color .6s var(--ease), color .6s var(--ease);
+}
+.cutaway__plate b { font-weight: 700; }
+
+/* ---------------------------------------------------------- fog bank */
+/* Peaks at --fog = 1, i.e. exactly halfway between two floors.
+   That is where the diorama swap happens, so the change is
+   hidden inside cloud rather than cutting on screen. */
+.fogbank {
+  position: absolute; inset: -2%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: var(--fog);
+  backdrop-filter: blur(calc(var(--fog) * 22px)) saturate(calc(1 - var(--fog) * .45));
+  -webkit-backdrop-filter: blur(calc(var(--fog) * 22px)) saturate(calc(1 - var(--fog) * .45));
+  background:
+    radial-gradient(70% 55% at 22% 38%, var(--cloud-a) 0%, transparent 62%),
+    radial-gradient(62% 50% at 74% 62%, var(--cloud-b) 0%, transparent 60%),
+    radial-gradient(90% 70% at 50% 50%, var(--cloud-a) 0%, transparent 72%);
+  mix-blend-mode: screen;
+}
+[data-sky="night"] .fogbank { mix-blend-mode: normal; opacity: calc(var(--fog) * .9); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .fogbank { opacity: calc(var(--fog) * .85); }
+}
+
+/* ---------------------------------------------------------- dioramas: 3D */
+.dioramas {
+  position: absolute; inset: 0;
+  z-index: 3;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+}
+
+.diorama {
+  position: absolute; inset: 0;
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .5s var(--ease), visibility .5s;
+}
+.diorama.is-active { opacity: 1; visibility: visible; }
+
+.diorama__world {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transform:
+    rotateX(var(--rx))
+    rotateY(var(--ry))
+    translateZ(calc(var(--dolly) * 1px));
+  transition: transform .12s linear;
+}
+
+/* Each layer sits at its own depth. The counter-scale keeps every
+   layer the same apparent size, so depth reads as parallax rather
+   than as things being bigger or smaller. */
+.layer {
+  position: absolute; inset: 0;
+  transform:
+    translateZ(calc(var(--zn) * 1px))
+    scale(calc((1000 - var(--zn)) / 1000));
+  transform-origin: 50% 50%;
+}
+.layer svg { width: 100%; height: 100%; }
+
+/* haze on the deepest layers reads as air between planes */
+.layer--far  { filter: blur(.6px); opacity: .96; }
+.layer--fore { filter: blur(1.4px); }
+
+/* ---------------------------------------------------------- copy column */
+.ascent__script {
+  position: relative;
+  z-index: 10;
+  margin-top: -100vh;
+}
+
+.beat {
+  min-height: 100svh;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 6rem clamp(1rem, 4vw, 3rem) 4rem;
+}
+
+.beat__card {
+  width: min(30rem, 100%);
+  margin-left: auto;
+  padding: clamp(1.25rem, 2.4vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: var(--shadow);
+
+  /* progressive fog behind the text: strongest as the card
+     arrives, easing off once it is parked in the middle */
+  backdrop-filter: blur(calc(6px + (1 - var(--enter, 0)) * 16px)) saturate(1.4);
+  -webkit-backdrop-filter: blur(calc(6px + (1 - var(--enter, 0)) * 16px)) saturate(1.4);
+
+  opacity: calc(.15 + var(--enter, 0) * .85);
+  transform: translateY(calc((1 - var(--enter, 0)) * 26px));
+  will-change: opacity, transform;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .beat__card { background: var(--card-solid); }
+}
+
+/* the opening and closing beats are centre stage, not a side panel */
+.beat--hero, .beat--summit { justify-content: center; text-align: center; }
+.beat--hero .beat__card,
+.beat--summit .beat__card {
+  width: min(46rem, 100%);
+  margin: 0;
+  text-align: center;
+}
+.beat--hero .eyebrow,
+.beat--summit .eyebrow { justify-content: center; }
+.beat--hero .ticks,
+.beat--summit .ticks { justify-content: center; }
+.beat--hero .chips,
+.beat--summit .chips { justify-content: center; }
+
+.hero__cta {
+  margin-top: 1.6rem;
+  display: flex; flex-wrap: wrap; gap: .7rem;
+  justify-content: center;
+}
+
+.scrollcue {
+  position: absolute;
+  left: 50%; bottom: 2.4rem;
+  transform: translateX(-50%);
+  display: grid; justify-items: center; gap: .5rem;
+  font-family: var(--mono); font-size: .66rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted);
+}
+.scrollcue i {
+  display: block;
+  width: 1px; height: 2.2rem;
+  background: linear-gradient(to bottom, var(--accent), transparent);
+  animation: cue 2.2s ease-in-out infinite;
+}
+@keyframes cue {
+  0%, 100% { transform: scaleY(.4); transform-origin: top; opacity: .4; }
+  50%      { transform: scaleY(1); transform-origin: top; opacity: 1; }
+}
+
+/* ---------------------------------------------------------- reveals */
+/* Default state is visible. The .js class (set before paint)
+   arms the hidden state, so with JS off everything reads fine. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity .7s var(--ease) var(--rd, 0ms),
+    transform .7s var(--ease) var(--rd, 0ms);
+}
+.js .reveal.is-in { opacity: 1; transform: none; }
+
+/* ---------------------------------------------------------- mobile */
+@media (max-width: 60rem) {
+  .cutaway {
+    top: clamp(4.5rem, 11vh, 7rem);
+    left: 50%;
+    transform: translateX(-50%) scale(var(--frame-scale, 1));
+    width: min(92vw, 34rem);
+  }
+  .beat {
+    align-items: flex-end;
+    padding-bottom: 5.5rem;
+  }
+  .beat__card {
+    width: 100%;
+    margin: 0;
+    /* heavier fog on small screens: the card sits directly on
+       top of the scene rather than beside it */
+    backdrop-filter: blur(calc(14px + (1 - var(--enter, 0)) * 18px)) saturate(1.5);
+    -webkit-backdrop-filter: blur(calc(14px + (1 - var(--enter, 0)) * 18px)) saturate(1.5);
+    background: color-mix(in srgb, var(--card-solid) 62%, transparent);
+  }
+  .beat--hero, .beat--summit { align-items: center; }
+  .ascent__script { margin-top: -100svh; }
+}
+
+@media (max-width: 60rem) and (max-height: 44rem) {
+  .cutaway { width: min(70vw, 22rem); top: 3rem; }
+}
+
+/* ---------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .drift, .sweep, .beacon-pulse, .rain, .flash, .scrollcue i {
+    animation: none !important;
+  }
+  .rain { opacity: calc(var(--rain-op) * .5); }
+
+  .diorama__world { transform: none; }
+  .cutaway { transition: opacity .2s linear; }
+
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+  .beat__card {
+    opacity: 1;
+    transform: none;
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  }
+  .fogbank { display: none; }
+}
