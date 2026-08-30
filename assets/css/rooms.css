@@ -1,0 +1,411 @@
+/* ============================================================
+   Nimbus - interiors.
+
+   Shared paint for every diorama, then the live instruments:
+   waveform, split-flap board, route map, dials, wire ticker,
+   archive lamp, switchboard transcript, signal room meters.
+   ============================================================ */
+
+/* ---------------------------------------------------------- shared paint */
+.r-wall    { fill: var(--r-wall); }
+.r-wall2   { fill: var(--r-wall2); }
+.r-floor   { fill: var(--r-floor); }
+.r-metal   { fill: var(--r-metal); }
+.r-metal2  { fill: var(--r-metal2); }
+.r-brass   { fill: var(--r-brass); }
+.r-dark    { fill: var(--r-dark); }
+.r-paper   { fill: var(--r-paper); }
+.r-screen  { fill: var(--r-screen); }
+.r-ink     { fill: var(--r-ink); }
+.r-accent  { fill: var(--r-accent); }
+.r-shadow  { fill: var(--r-shadow); }
+.r-lamp    { fill: var(--r-lamp); }
+.r-glass   { fill: var(--glass); }
+
+.r-wall, .r-wall2, .r-floor, .r-metal, .r-metal2, .r-brass,
+.r-dark, .r-paper, .r-screen, .r-ink, .r-accent, .r-glass {
+  transition: fill .6s var(--ease);
+}
+
+.st-line   { stroke: var(--r-line); fill: none; }
+.st-metal  { stroke: var(--r-metal); fill: none; }
+.st-brass  { stroke: var(--r-brass); fill: none; }
+.st-ink    { stroke: var(--r-ink); fill: none; }
+.st-accent { stroke: var(--r-accent); fill: none; }
+.st-dark   { stroke: var(--r-dark); fill: none; }
+.st-line, .st-metal, .st-brass, .st-ink, .st-accent, .st-dark {
+  transition: stroke .6s var(--ease);
+}
+
+/* the sky seen through each room's window, kept in sync with outside */
+.r-sky-1 { fill: var(--sky-2); transition: fill .6s var(--ease); }
+.r-sky-2 { fill: var(--sky-3); transition: fill .6s var(--ease); }
+.r-cloud { fill: var(--cloud-a); opacity: calc(var(--cloud-op) * .9); transition: fill .6s var(--ease); }
+
+/* pooled lamplight, much stronger at night */
+.lamplight {
+  fill: var(--r-lamp);
+  transition: fill .6s var(--ease);
+}
+
+/* ---------------------------------------------------------- 01 radio room */
+.wave rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: waveBar 1.05s ease-in-out infinite alternate;
+}
+@keyframes waveBar {
+  from { transform: scaleY(.16); }
+  to   { transform: scaleY(1); }
+}
+
+.mic-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: micRing 2.6s ease-out infinite;
+}
+.mic-ring--b { animation-delay: -1.3s; }
+@keyframes micRing {
+  0%   { transform: scale(.55); opacity: .0; }
+  22%  { opacity: .55; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.vu-needle {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: vuSwing 2.9s ease-in-out infinite alternate;
+}
+@keyframes vuSwing {
+  from { transform: rotate(-32deg); }
+  to   { transform: rotate(26deg); }
+}
+
+.rec-lamp { animation: recBlink 1.9s steps(1) infinite; }
+@keyframes recBlink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: .22; }
+}
+
+/* ---------------------------------------------------------- 02 ops deck */
+/* split-flap departure board */
+.flapboard {
+  position: absolute;
+  left: 8%; top: 20%;
+  width: 56%;
+  padding: .5rem;
+  border-radius: .3rem;
+  background: #12161c;
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, .8),
+              0 0 0 1px rgba(255, 255, 255, .06) inset;
+  font-family: var(--mono);
+  container-type: inline-size;
+}
+.flapboard__head {
+  display: grid;
+  grid-template-columns: 1fr 3.4em 3.6em;
+  gap: .4em;
+  padding: 0 .2em .3em;
+  font-size: clamp(.34rem, 1.5cqi, .58rem);
+  letter-spacing: .16em;
+  color: #6b7a86;
+  text-transform: uppercase;
+}
+.flaprow {
+  display: grid;
+  grid-template-columns: 1fr 3.4em 3.6em;
+  gap: .4em;
+  margin-bottom: .18em;
+  font-size: clamp(.4rem, 1.9cqi, .72rem);
+}
+.flapcell {
+  display: flex;
+  gap: .06em;
+  overflow: hidden;
+}
+.flapcell--r { justify-content: flex-end; }
+
+.flap {
+  position: relative;
+  display: inline-block;
+  min-width: .74em;
+  padding: .12em 0;
+  border-radius: .1em;
+  background: linear-gradient(#2b3138 0 49%, #1d2229 49% 51%, #232930 51% 100%);
+  color: #f2e6c8;
+  text-align: center;
+  line-height: 1;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .6);
+}
+.flap--on { color: #7ff0c4; }
+.flap--late { color: #ff9c6b; }
+.flap.is-turning { animation: flapTurn .11s linear; }
+@keyframes flapTurn {
+  0%   { transform: perspective(60px) rotateX(0deg); filter: brightness(1); }
+  49%  { transform: perspective(60px) rotateX(-78deg); filter: brightness(.45); }
+  51%  { transform: perspective(60px) rotateX(78deg); filter: brightness(.45); }
+  100% { transform: perspective(60px) rotateX(0deg); filter: brightness(1); }
+}
+
+/* route map */
+.route-line {
+  stroke-dasharray: 7 5;
+  animation: routeRun 1.6s linear infinite;
+}
+@keyframes routeRun { to { stroke-dashoffset: -24; } }
+
+.route-pip {
+  offset-path: path("M 96 300 C 170 250 214 214 268 196 C 330 176 372 148 430 120");
+  offset-rotate: 0deg;
+  animation: routeTravel 5.2s ease-in-out infinite;
+}
+@keyframes routeTravel {
+  0%, 6%    { offset-distance: 0%; opacity: 0; }
+  10%       { opacity: 1; }
+  90%       { opacity: 1; }
+  96%, 100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* ---------------------------------------------------------- 03 weather deck */
+.dial-needle {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: rotate(var(--deg, 0deg));
+  transition: transform 2.4s cubic-bezier(.34, .8, .3, 1);
+}
+
+.anemo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin 2.2s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.baro-trace {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: traceIn 4.5s ease-out infinite;
+}
+@keyframes traceIn {
+  0%       { stroke-dashoffset: 300; }
+  55%, 88% { stroke-dashoffset: 0; }
+  100%     { stroke-dashoffset: 0; opacity: 0; }
+}
+
+.radar-arm {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin 4.4s linear infinite;
+}
+
+.plane-blip {
+  animation: blip 3.6s ease-in-out infinite;
+}
+.plane-blip--b { animation-delay: -1.2s; }
+.plane-blip--c { animation-delay: -2.4s; }
+@keyframes blip {
+  0%, 100% { opacity: .25; }
+  40%      { opacity: 1; }
+}
+
+/* ---------------------------------------------------------- 04 wire room */
+.tickertape {
+  position: absolute;
+  left: 6%; top: 63.5%;
+  width: 62%;
+  overflow: hidden;
+  padding: .34em .1em;
+  border-radius: .18rem;
+  background: #0d1218;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .07) inset;
+  font-family: var(--mono);
+  font-size: clamp(.4rem, 1.5cqi, .66rem);
+  letter-spacing: .04em;
+  container-type: inline-size;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.tickertape__run {
+  display: flex;
+  width: max-content;
+  gap: 2.2em;
+  color: #ffcf87;
+  white-space: nowrap;
+  animation: tickerRun 34s linear infinite;
+}
+.tickertape__run span { display: inline-flex; gap: .55em; }
+.tickertape__run em { font-style: normal; color: #6b7d8a; }
+.tickertape__run b { font-weight: 500; color: #7ff0c4; }
+.tickertape__run b.dn { color: #ff8f6b; }
+@keyframes tickerRun {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.teletype-key {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: keyPeck 1.4s ease-in-out infinite;
+}
+.teletype-key:nth-of-type(2n) { animation-delay: -.35s; }
+.teletype-key:nth-of-type(3n) { animation-delay: -.75s; }
+@keyframes keyPeck {
+  0%, 70%, 100% { transform: translateY(0); }
+  78%           { transform: translateY(1.6px); }
+}
+
+.paperfeed {
+  animation: feed 6s linear infinite;
+}
+@keyframes feed {
+  from { transform: translateY(-14px); }
+  to   { transform: translateY(0); }
+}
+
+/* ---------------------------------------------------------- 05 archive */
+.scanbar {
+  animation: scan 5.4s ease-in-out infinite;
+}
+@keyframes scan {
+  0%, 100% { transform: translateY(0); opacity: 0; }
+  8%       { opacity: .9; }
+  84%      { opacity: .9; }
+  92%      { transform: translateY(104px); opacity: 0; }
+  100%     { transform: translateY(104px); }
+}
+
+.doc-line {
+  animation: docHighlight 5.4s ease-in-out infinite;
+  opacity: .35;
+}
+.doc-line:nth-of-type(1) { animation-delay: .3s; }
+.doc-line:nth-of-type(2) { animation-delay: .9s; }
+.doc-line:nth-of-type(3) { animation-delay: 1.5s; }
+.doc-line:nth-of-type(4) { animation-delay: 2.1s; }
+.doc-line:nth-of-type(5) { animation-delay: 2.7s; }
+.doc-line:nth-of-type(6) { animation-delay: 3.3s; }
+@keyframes docHighlight {
+  0%, 6%   { opacity: .3; }
+  12%, 60% { opacity: 1; }
+  74%,100% { opacity: .3; }
+}
+
+.card-drawer {
+  animation: drawerSlide 7.5s ease-in-out infinite;
+}
+@keyframes drawerSlide {
+  0%, 42%, 100% { transform: translateX(0); }
+  16%, 30%      { transform: translateX(13px); }
+}
+
+/* ---------------------------------------------------------- 06 switchboard */
+.patchcord {
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
+  animation: patchIn 6.5s ease-in-out infinite;
+}
+.patchcord--b { animation-delay: -2.2s; }
+.patchcord--c { animation-delay: -4.4s; }
+@keyframes patchIn {
+  0%       { stroke-dashoffset: 220; }
+  22%, 82% { stroke-dashoffset: 0; }
+  96%,100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+.jack-lamp { animation: recBlink 2.4s steps(1) infinite; }
+.jack-lamp--b { animation-delay: -.8s; }
+.jack-lamp--c { animation-delay: -1.6s; }
+
+/* live transcript strip */
+.transcript {
+  position: absolute;
+  right: 6%; top: 22%;
+  width: 40%;
+  padding: .55em .6em;
+  border-radius: .25rem;
+  background: rgba(6, 24, 22, .92);
+  box-shadow: 0 0 0 1px rgba(120, 255, 210, .16) inset;
+  font-family: var(--mono);
+  font-size: clamp(.36rem, 1.45cqi, .6rem);
+  line-height: 1.65;
+  color: #9fe8d2;
+  container-type: inline-size;
+}
+.transcript__line { display: block; min-height: 1.65em; }
+.transcript__who {
+  color: #ffcf87;
+  letter-spacing: .06em;
+}
+.transcript__who--b { color: #7fc4ff; }
+.transcript__caret {
+  display: inline-block;
+  width: .5em; height: 1em;
+  vertical-align: -.14em;
+  background: #7ff0c4;
+  animation: caret 1s steps(1) infinite;
+}
+@keyframes caret { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+/* ---------------------------------------------------------- 07 signal room */
+.shield-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: shieldPulse 4s ease-in-out infinite;
+}
+@keyframes shieldPulse {
+  0%, 100% { opacity: .28; transform: scale(1); }
+  50%      { opacity: .62; transform: scale(1.04); }
+}
+
+.gpu-bar {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  animation: gpuLoad 2.8s ease-in-out infinite alternate;
+}
+.gpu-bar--b { animation-delay: -.7s; animation-duration: 3.4s; }
+.gpu-bar--c { animation-delay: -1.4s; animation-duration: 2.2s; }
+@keyframes gpuLoad {
+  from { transform: scaleX(.24); }
+  to   { transform: scaleX(1); }
+}
+
+/* the cloud uplink stays dark: local mode means nothing leaves */
+.uplink-off { opacity: .22; }
+.link-x { stroke: var(--r-accent); stroke-width: 3; }
+
+.antenna-wave {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: micRing 3s ease-out infinite;
+}
+.antenna-wave--b { animation-delay: -1s; }
+.antenna-wave--c { animation-delay: -2s; }
+
+/* ---------------------------------------------------------- html overlays */
+/* Instruments that are easier as DOM than as SVG ride on their
+   own layer inside the diorama, positioned in percentages. */
+.htmlayer {
+  position: absolute; inset: 0;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .wave rect, .mic-ring, .vu-needle, .rec-lamp,
+  .route-line, .route-pip, .anemo, .baro-trace, .radar-arm, .plane-blip,
+  .tickertape__run, .teletype-key, .paperfeed,
+  .scanbar, .doc-line, .card-drawer,
+  .patchcord, .jack-lamp, .transcript__caret,
+  .shield-pulse, .gpu-bar, .antenna-wave,
+  .flap.is-turning {
+    animation: none !important;
+  }
+  .wave rect { transform: scaleY(.6); }
+  .doc-line { opacity: .85; }
+  .patchcord { stroke-dashoffset: 0; }
+  .baro-trace { stroke-dashoffset: 0; }
+  .gpu-bar { transform: scaleX(.7); }
+  .scanbar { opacity: .7; }
+  .tickertape__run { animation: none; transform: none; }
+}
