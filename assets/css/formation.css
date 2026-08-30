@@ -36,10 +36,138 @@
 }
 html.is-intro #orb { opacity: 0; }
 
-/* the core rises under the shell before the particles are gone,
-   so the two are briefly on screen together and the swap reads
-   as the particles becoming the orb */
-html.is-intro.is-igniting #orb { opacity: 1; }
+/* The core is brought up fast and inside the ignition flash, so
+   there is never a visible cross-fade between the two - by the
+   time the flash clears, the real orb is simply what is there. */
+html.is-intro.is-igniting #orb {
+  opacity: 1;
+  transition: opacity .18s cubic-bezier(.2, .7, .3, 1);
+}
+
+/* ---------------------------------------------------------- the burst */
+/* Both are centred on the core and sized from its radius, and both
+   are transform + opacity only, so they stay on the compositor. */
+.formation-flash,
+.formation-ring,
+.formation-ring2 {
+  position: fixed;
+  z-index: 51;
+  left: 0;
+  top: 0;
+  width: var(--d);
+  height: var(--d);
+  margin-left: calc(var(--x) - var(--d) / 2);
+  margin-top: calc(var(--y) - var(--d) / 2);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.formation-flash {
+  background: radial-gradient(circle closest-side,
+    rgba(255, 255, 255, .95) 0%,
+    rgba(190, 220, 255, .70) 14%,
+    rgba(110, 165, 255, .34) 30%,
+    rgba(70, 120, 255, .12) 48%,
+    transparent 70%);
+  mix-blend-mode: screen;
+  animation: fxFlash .62s cubic-bezier(.15, .8, .3, 1) forwards;
+}
+
+.formation-ring,
+.formation-ring2 {
+  /* a broad soft front rather than a hard annulus, which would
+     read as a loading ring */
+  background: radial-gradient(circle closest-side,
+    transparent 44%,
+    rgba(150, 195, 255, .26) 66%,
+    rgba(205, 230, 255, .60) 81%,
+    rgba(130, 180, 255, .16) 93%,
+    transparent 100%);
+  mix-blend-mode: screen;
+  animation: fxRing .78s cubic-bezier(.1, .75, .25, 1) forwards;
+}
+
+/* a second, slower front so the blast has depth rather than
+   reading as a single expanding circle */
+.formation-ring2 {
+  animation-duration: 1.25s;
+  animation-delay: .07s;
+  opacity: 0;
+}
+
+/* the bang itself: a brief wash across the whole viewport */
+.formation-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 52;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 100% at var(--bx, 50%) var(--by, 30%),
+      rgba(226, 238, 255, .85) 0%,
+      rgba(140, 185, 255, .38) 22%,
+      rgba(70, 120, 255, .10) 45%,
+      transparent 72%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  will-change: opacity;
+  animation: fxVeil .72s cubic-bezier(.1, .8, .3, 1) forwards;
+}
+
+@keyframes fxVeil {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  30%  { opacity: .34; }
+  100% { opacity: 0; }
+}
+
+@keyframes fxFlash {
+  0%   { opacity: 0;  transform: scale(.24); }
+  14%  { opacity: 1;  transform: scale(.78); }
+  46%  { opacity: .5; transform: scale(1.22); }
+  100% { opacity: 0;  transform: scale(1.7); }
+}
+
+@keyframes fxRing {
+  0%   { opacity: 0;   transform: scale(.34); }
+  16%  { opacity: .9;  transform: scale(.9); }
+  100% { opacity: 0;   transform: scale(3.6); }
+}
+
+/* ---------------------------------------------------------- born in the blast */
+/* The page does not fade in next to the explosion - it is thrown
+   out of it. Everything scales up from the core's position and
+   settles. These are one-shot: .is-blast is removed afterwards so
+   the elements go back under the site's normal control. */
+html.is-blast .field {
+  transform-origin: var(--bx, 50%) var(--by, 30%);
+  animation: fxFieldBorn 1.15s cubic-bezier(.16, .84, .28, 1) both;
+}
+
+html.is-blast .topbar {
+  animation: fxChromeBorn .85s cubic-bezier(.16, .84, .28, 1) .12s both;
+}
+
+html.is-blast .beat--open .reveal {
+  animation: fxBorn .95s cubic-bezier(.16, .84, .28, 1) var(--rd, 0ms) both;
+}
+
+@keyframes fxFieldBorn {
+  0%   { opacity: 0; transform: scale(.78); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes fxChromeBorn {
+  0%   { opacity: 0; transform: translateY(-14px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes fxBorn {
+  0%   { opacity: 0; transform: translateY(30px) scale(.86); filter: blur(8px); }
+  38%  { opacity: 1; }
+  100% { opacity: 1; transform: none; filter: none; }
+}
 
 .field,
 .topbar,
@@ -62,7 +190,15 @@ html.is-intro .beat--open .reveal {
 /* The sequence is skipped in JS, but if the class ever lands
    anyway nothing should stay hidden. */
 @media (prefers-reduced-motion: reduce) {
-  .formation { display: none; }
+  .formation,
+  .formation-flash,
+  .formation-ring,
+  .formation-ring2,
+  .formation-veil { display: none; }
+
+  html.is-blast .field,
+  html.is-blast .topbar,
+  html.is-blast .beat--open .reveal { animation: none; }
 
   html.is-intro #orb,
   html.is-intro .field,

@@ -117,9 +117,31 @@ window.NimbusFormation = (function () {
     '  float over = sin(eR * PI) * uRadius * (variety - 0.5) * 0.85;',
     '  float rad  = mix(r0, rEnd, eR) + over;',
 
-    /* --- final compression into the core --- */
-    '  float col = smoothstep(' + SHELL_AT.toFixed(2) + ', 1.0, uProgress);',
-    '  rad *= 1.0 - col * 0.93;',
+    /* --- ignition ---------------------------------------------
+       Not a shrink. The shell whips inward while spinning up, the
+       whole field flares, and about a tenth of it rebounds back
+       out as sparks. The swap to the real core happens inside
+       that flare, so there is no cross-fade to catch. */
+    '  float ig  = smoothstep(0.855, 0.925, uProgress);',
+    '  float ig2 = ig * ig;',
+
+    /* angular momentum spikes as the radius collapses */
+    '  ang += ig2 * 2.7 * dir;',
+
+    /* pow(ig, 0.55) front-loads the travel, so it snaps rather
+       than eases in */
+    '  float collapse = 1.0 - pow(ig, 0.55) * 0.985;',
+
+    /* sparks thrown back out by the ignition */
+    /* staggered launch, so debris leaves in waves rather than as
+       one expanding ring */
+    '  float lag    = 0.884 + aSeed.z * 0.030;',
+    '  float sparkT = clamp((uProgress - lag) / 0.106, 0.0, 1.0);',
+    '  float sparkE = sparkT * (2.0 - sparkT);',
+    '  float spark  = step(0.86, variety) * sparkE;',
+    /* debris is flung well past the core, at its own speed */
+    '  rad = rad * collapse + spark * uRadius * mix(1.6, 5.2, aParam.y);',
+    '  ang += spark * dir * 0.55;',
 
     '  vec2 pos = uCenter + vec2(cos(ang), sin(ang)) * rad;',
 
@@ -135,13 +157,14 @@ window.NimbusFormation = (function () {
 
     '  float sz = mix(1.00, 3.30, variety) * (0.45 + depth * 1.25);',
     '  sz *= 1.0 + 1.20 * smoothstep(0.80, 0.98, uProgress);',
-    '  sz *= 1.0 - col * 0.55;',
+    '  sz *= 1.0 + 0.50 * ig * (1.0 - smoothstep(0.90, 1.0, uProgress));',
     '  gl_PointSize = max(1.0, sz * uDpr);',
 
     '  float tw = 0.78 + 0.22 * sin(uTime * mix(0.8, 2.4, variety) + aSeed.x * TAU);',
+    '  float flare = 1.0 + 4.2 * ig * (1.0 - smoothstep(0.895, 0.99, uProgress));',
     '  vBright = (0.45 + depth * 1.05) * tw',
     '          * (0.50 + 0.80 * smoothstep(0.0, 0.55, t))',
-    '          * (1.0 + 1.60 * smoothstep(0.86, 0.99, uProgress));',
+    '          * flare * (1.0 - spark * 0.45);',
     '  vColor  = aColor;',
     '}'
   ].join('\n');
@@ -386,22 +409,62 @@ window.NimbusFormation = (function () {
       gl.uniform2f(U.uMouse, mx, my);
       gl.uniform1f(U.uMouseOn, mouseOn);
       /* hold full brightness through the shell, then hand over */
-      gl.uniform1f(U.uFade, 1 - Math.pow(Math.max(0, (p - 0.90) / 0.10), 1.4));
+      gl.uniform1f(U.uFade, 1 - Math.pow(Math.max(0, (p - 0.925) / 0.075), 1.3));
       gl.drawArrays(gl.POINTS, 0, COUNT);
 
-      /* the real core rises under the collapsing shell */
-      if (!ignited && p >= 0.80) {
+      /* One instant, not a cross-fade: the shell arrives, the page
+         flashes, a shockwave leaves the core, the real plasma is
+         told to surge, and the orb is brought up inside the flash. */
+      if (!ignited && p >= 0.875) {
         ignited = true;
+        burst(orb.metrics());
+        if (orb.surge) orb.surge(0.55);
         doc.classList.add('is-igniting');
-      }
-      /* hero copy starts arriving on the site's own timing */
-      if (!released && p >= 0.90) {
+
+        /* The blast is what produces the page: the copy, the chrome
+           and the backdrop are all thrown outward from the core at
+           this instant rather than fading in afterwards. */
         released = true;
         release();
+        doc.classList.add('is-blast');
+        window.setTimeout(function () {
+          doc.classList.remove('is-blast');
+        }, 2200);
       }
 
       if (p < 1) raf = window.requestAnimationFrame(frame);
       else finish();
+    }
+
+    /* Two compositor-only elements: a flash centred on the core and
+       a shockwave ring leaving it. Both are transform + opacity, so
+       they cost nothing, and both remove themselves. */
+    function burst(m) {
+      /* everything born in the blast radiates from the core */
+      doc.style.setProperty('--bx', m.cx + 'px');
+      doc.style.setProperty('--by', m.cy + 'px');
+
+      var veil = document.createElement('div');
+      veil.className = 'formation-veil';
+      veil.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(veil);
+      window.setTimeout(function () {
+        if (veil.parentNode) veil.parentNode.removeChild(veil);
+      }, 1200);
+
+      ['flash', 'ring', 'ring2'].forEach(function (kind) {
+        var el = document.createElement('div');
+        el.className = 'formation-' + kind;
+        el.setAttribute('aria-hidden', 'true');
+        var d = m.r * (kind === 'flash' ? 5.4 : 2.05);
+        el.style.setProperty('--x', m.cx + 'px');
+        el.style.setProperty('--y', m.cy + 'px');
+        el.style.setProperty('--d', d + 'px');
+        document.body.appendChild(el);
+        window.setTimeout(function () {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, 1100);
+      });
     }
 
     function finish() {
