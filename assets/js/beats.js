@@ -18,7 +18,8 @@ window.NIMBUS_BEATS = [
   {
     id: 'open', no: '', label: 'Core',
     charge: 0.62,
-    pal: { beam: [79, 124, 255], arc: [155, 195, 255], core: [226, 238, 255] }
+    /* the opening core is white - it takes on colour as you scroll */
+    pal: { beam: [242, 247, 255], arc: [252, 253, 255], core: [255, 255, 255] }
   },
   {
     id: 'voice', no: '01', label: 'Voice',
