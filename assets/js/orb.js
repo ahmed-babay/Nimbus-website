@@ -47,6 +47,14 @@ window.NimbusOrb = (function () {
     return p;
   }
 
+  /* A deep, tinted version of a palette colour: dark enough to read
+     as the dense heart of the core, but still carrying the hue so it
+     is never a flat black hole. Shifts with the beat like everything
+     else - deep indigo on the blue beats, deep umber on the amber. */
+  function deepen(c) {
+    return [c[0] * 0.10 + 6, c[1] * 0.10 + 9, c[2] * 0.12 + 18];
+  }
+
   function rgba(c, a) {
     return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')';
   }
@@ -355,13 +363,14 @@ window.NimbusOrb = (function () {
         }
       }
 
-      /* ---- the white-hot centre ---- */
+      /* ---- the glow the heart sits in ---- */
+      /* No white blowout here any more: just the beat's own hue,
+         so the middle reads as saturated rather than blinding. */
       var pulse = 0.82 + 0.18 * Math.sin(now * 0.0034) + 0.1 * Math.sin(now * 0.011);
       var cr = R * (0.52 + power * 0.22) * pulse;
       var core = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
-      core.addColorStop(0, rgba(pal.core, 0.80 * (0.5 + power * 0.5)));
-      core.addColorStop(0.16, rgba(pal.arc, 0.42 * (0.4 + power * 0.6)));
-      core.addColorStop(0.52, rgba(pal.beam, 0.18 * (0.4 + power * 0.6)));
+      core.addColorStop(0, rgba(pal.arc, 0.30 * (0.45 + power * 0.55)));
+      core.addColorStop(0.30, rgba(pal.beam, 0.22 * (0.4 + power * 0.6)));
       core.addColorStop(1, rgba(pal.beam, 0));
       ctx.fillStyle = core;
       ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
@@ -374,6 +383,32 @@ window.NimbusOrb = (function () {
       fog.addColorStop(1, rgba(pal.beam, 0.02));
       ctx.fillStyle = fog;
       ctx.fillRect(cx - fogr, cy - fogr, fogr * 2, fogr * 2);
+
+      /* ---- the heart ----
+         Painted over the plasma, not added to it, so the centre is a
+         dense dark mass with the storm raging around it instead of a
+         white hot spot. */
+      var deep = deepen(pal.beam);
+      var hr = R * (0.30 + power * 0.06) * pulse;
+      ctx.globalCompositeOperation = 'source-over';
+      var heart = ctx.createRadialGradient(cx, cy, 0, cx, cy, hr);
+      heart.addColorStop(0, rgba(deep, 0.88));
+      heart.addColorStop(0.42, rgba(deep, 0.74));
+      heart.addColorStop(0.75, rgba(deep, 0.30));
+      heart.addColorStop(1, rgba(deep, 0));
+      ctx.fillStyle = heart;
+      ctx.fillRect(cx - hr, cy - hr, hr * 2, hr * 2);
+
+      /* a lit edge where the heart meets the storm, so it reads as
+         dense rather than as a hole punched in the middle */
+      ctx.globalCompositeOperation = 'lighter';
+      var er = hr * 1.55;
+      var edge = ctx.createRadialGradient(cx, cy, hr * 0.55, cx, cy, er);
+      edge.addColorStop(0, rgba(pal.beam, 0));
+      edge.addColorStop(0.50, rgba(pal.arc, 0.30 * (0.4 + power * 0.6)));
+      edge.addColorStop(1, rgba(pal.beam, 0));
+      ctx.fillStyle = edge;
+      ctx.fillRect(cx - er, cy - er, er * 2, er * 2);
 
       /* ---- inner rim: light catching the inside of the shell ---- */
       var inner = ctx.createRadialGradient(cx, cy, R * 0.74, cx, cy, R);

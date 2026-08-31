@@ -70,7 +70,7 @@ img, svg, canvas { display: block; max-width: 100%; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
 
-::selection { background: rgb(var(--beam) / .32); color: #fff; }
+::selection { background: rgb(var(--beam) / .32); color: var(--ink); }
 
 :focus-visible {
   outline: 2px solid rgb(var(--beam));
