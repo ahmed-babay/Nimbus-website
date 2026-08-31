@@ -1,5 +1,4 @@
-# Nimbus — website
-
+[Nimbus Website](https://ahmed-babay.github.io/Nimbus-website/)
 The official site for [Nimbus](https://github.com/ahmed-babay/nimbus), a voice-activated
 AI assistant for Windows.
 
