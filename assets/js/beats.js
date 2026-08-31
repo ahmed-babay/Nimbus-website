@@ -9,6 +9,8 @@
      beam  the dominant colour: outer glow, rim, page accents
      arc   the lightning itself
      core  the white-hot centre
+     dark  0 by default; 1 paints a dark mass over the plasma, so
+           the core reads black with the storm raging around it
 
    `charge` is the baseline plasma intensity for the beat, before
    the per-beat surge and the scroll-velocity boost are added.
@@ -59,6 +61,7 @@ window.NIMBUS_BEATS = [
   {
     id: 'close', no: '', label: 'Ignition',
     charge: 1.00,
-    pal: { beam: [188, 214, 255], arc: [236, 245, 255], core: [255, 255, 255] }
+    dark: 1,
+    pal: { beam: [104, 124, 168], arc: [188, 208, 244], core: [230, 240, 255] }
   }
 ];

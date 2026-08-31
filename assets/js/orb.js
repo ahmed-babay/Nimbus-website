@@ -47,6 +47,13 @@ window.NimbusOrb = (function () {
     return p;
   }
 
+  /* A deep, tinted version of a palette colour - dark enough to read
+     as a dense mass, but still carrying the hue so it never becomes a
+     flat black hole. */
+  function deepen(c) {
+    return [c[0] * 0.09 + 4, c[1] * 0.09 + 6, c[2] * 0.11 + 13];
+  }
+
   function rgba(c, a) {
     return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a + ')';
   }
@@ -157,6 +164,7 @@ window.NimbusOrb = (function () {
     /* live state, pushed in by app.js */
     var pal = { beam: [79, 124, 255], arc: [155, 195, 255], core: [226, 238, 255] };
     var intensity = 0.6;
+    var dark = 0;
     var boost = 0;
 
     for (var f = 0; f < 24; f++) filaments.push(makeFilament());
@@ -375,6 +383,33 @@ window.NimbusOrb = (function () {
       ctx.fillStyle = fog;
       ctx.fillRect(cx - fogr, cy - fogr, fogr * 2, fogr * 2);
 
+      /* ---- a dark mass at the centre, on the beats that ask for it ----
+         Painted over the plasma rather than added to it, because
+         additive blending can only ever make things brighter. */
+      if (dark > 0.002) {
+        var deep = deepen(pal.beam);
+        var hr = R * (0.50 + power * 0.06) * pulse;
+        ctx.globalCompositeOperation = 'source-over';
+        var heart = ctx.createRadialGradient(cx, cy, 0, cx, cy, hr);
+        heart.addColorStop(0, rgba(deep, 0.96 * dark));
+        heart.addColorStop(0.46, rgba(deep, 0.86 * dark));
+        heart.addColorStop(0.78, rgba(deep, 0.40 * dark));
+        heart.addColorStop(1, rgba(deep, 0));
+        ctx.fillStyle = heart;
+        ctx.fillRect(cx - hr, cy - hr, hr * 2, hr * 2);
+
+        /* a lit edge where the mass meets the storm, so it reads as
+           dense rather than as a hole punched in the middle */
+        ctx.globalCompositeOperation = 'lighter';
+        var er = hr * 1.34;
+        var edge = ctx.createRadialGradient(cx, cy, hr * 0.70, cx, cy, er);
+        edge.addColorStop(0, rgba(pal.beam, 0));
+        edge.addColorStop(0.55, rgba(pal.arc, 0.40 * dark * (0.4 + power * 0.6)));
+        edge.addColorStop(1, rgba(pal.beam, 0));
+        ctx.fillStyle = edge;
+        ctx.fillRect(cx - er, cy - er, er * 2, er * 2);
+      }
+
       /* ---- inner rim: light catching the inside of the shell ---- */
       var inner = ctx.createRadialGradient(cx, cy, R * 0.74, cx, cy, R);
       inner.addColorStop(0, rgba(pal.beam, 0));
@@ -443,9 +478,10 @@ window.NimbusOrb = (function () {
         if (calm) still();
       },
 
-      set: function (nextPal, nextIntensity, nextAim) {
+      set: function (nextPal, nextIntensity, nextAim, nextDark) {
         pal = nextPal;
         intensity = nextIntensity;
+        dark = nextDark || 0;
         if (nextAim !== aim) { aim = nextAim; place(); }
         if (calm) still();
       },

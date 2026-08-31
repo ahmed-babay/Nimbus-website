@@ -122,7 +122,11 @@
     /* the core sits high and central on the opening and closing
        beats, and slides aside for the feature panels between */
     var aim = clamp(Math.min(u, LAST - u), 0, 1);
-    if (orb) orb.set(mix, intensity, aim);
+
+    /* how much of a dark mass sits over the plasma on this beat */
+    var dark = lerp(A.dark || 0, B.dark || 0, t);
+
+    if (orb) orb.set(mix, intensity, aim, dark);
 
     /* -- scrolling hard whips the storm up -- */
     var dy = Math.abs(y - lastY);

@@ -246,12 +246,14 @@ window.NimbusFormation = (function () {
       });
     }
 
-    /* the site's own opening palette: blue, cyan, violet, soft white */
+    /* Mostly white, with only a breath of blue, cyan and violet
+       left in it - the core these form is white, so the light that
+       gathers into it should read white too. */
     var hues = [
-      [0.31, 0.49, 1.00], [0.31, 0.49, 1.00], [0.31, 0.49, 1.00],
-      [0.13, 0.80, 0.93], [0.13, 0.80, 0.93],
-      [0.55, 0.36, 0.96], [0.55, 0.36, 0.96],
-      [0.86, 0.90, 1.00], [0.86, 0.90, 1.00]
+      [0.78, 0.86, 1.00], [0.78, 0.86, 1.00], [0.78, 0.86, 1.00],
+      [0.80, 0.95, 1.00], [0.80, 0.95, 1.00],
+      [0.89, 0.86, 1.00], [0.89, 0.86, 1.00],
+      [1.00, 1.00, 1.00], [1.00, 1.00, 1.00], [1.00, 1.00, 1.00]
     ];
 
     for (var i = 0; i < n; i++) {
